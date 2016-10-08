@@ -235,8 +235,8 @@ void ready()
 		ReadConsoleInput(hin, ir, 128, &nRead);
 		if (MOUSE_EVENT == ir[i].EventType && FROM_LEFT_1ST_BUTTON_PRESSED == ir[i].Event.MouseEvent.dwButtonState)
 		{
-			int row = ir[i].Event.MouseEvent.dwMousePosition.X / 2;
-			int col = ir[i].Event.MouseEvent.dwMousePosition.Y / 2;
+			int row = (ir[i].Event.MouseEvent.dwMousePosition.X + 1) / 2;
+			int col = (ir[i].Event.MouseEvent.dwMousePosition.Y + 1) / 2;
 			if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && putChessAt(row, col))
 			{
 		    	memset(buffer, 0, sizeof(buffer));
@@ -283,7 +283,7 @@ void work()
 			//TODO: parse
 			char tmp[MAXBYTE] = {0};
 			int row,  col;
-			sscanf(buffer, "%s %d %d", tmp, row, col);
+			sscanf(buffer, "%s %d %d", tmp, &row, &col);
 			turn(row, col);
 		}
 		else if (strstr(buffer, WIN))
