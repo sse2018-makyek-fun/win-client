@@ -21,7 +21,7 @@
 #define MESSAGE_X 100
 #define MESSAGE_Y 20
 
-const char EMPTY_MESSAGE[50] = {' '};
+const char EMPTY_MESSAGE[50] = {32};
 
 char buffer[MAXBYTE] = {0};
 char board[BOARD_SIZE][BOARD_SIZE] = {0};
@@ -233,16 +233,30 @@ void ready()
 	while (TRUE)
 	{
 		ReadConsoleInput(hin, ir, 128, &nRead);
-		if (MOUSE_EVENT == ir[i].EventType && FROM_LEFT_1ST_BUTTON_PRESSED == ir[i].Event.MouseEvent.dwButtonState)
+		for (i = 0; i < nRead; i++)
 		{
-			int row = (ir[i].Event.MouseEvent.dwMousePosition.X + 1) / 2;
-			int col = (ir[i].Event.MouseEvent.dwMousePosition.Y + 1) / 2;
-			if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && putChessAt(row, col))
+			if (MOUSE_EVENT == ir[i].EventType && FROM_LEFT_1ST_BUTTON_PRESSED == ir[i].Event.MouseEvent.dwButtonState)
 			{
-		    	memset(buffer, 0, sizeof(buffer));
-		    	sprintf(buffer, "%d %d\n", row, col);
-		    	sendTo(buffer, &sock);
-				return;
+				int rawX = ir[i].Event.MouseEvent.dwMousePosition.X;
+				int rawY = ir[i].Event.MouseEvent.dwMousePosition.Y;
+				
+				memset(buffer, 0, sizeof(buffer));
+			    sprintf(buffer, "%d %d\n", rawX, rawY);
+				showInfo(buffer);
+				
+				if (rawX % 4 == 0 || rawX % 4 == 3 || rawY % 2 == 0) continue;
+				
+				int row = rawX / 2;
+				int col = rawY / 4;
+
+				
+				if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && putChessAt(row, col))
+				{
+			    	memset(buffer, 0, sizeof(buffer));
+			    	sprintf(buffer, "%d %d\n", row, col);
+			    	sendTo(buffer, &sock);
+					return;
+				}
 			}
 		}
 	}
@@ -294,8 +308,6 @@ void work()
 		{
 			lose();
 		}
-    	
-
 	}
 }
 
