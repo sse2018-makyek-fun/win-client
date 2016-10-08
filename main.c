@@ -28,7 +28,7 @@ char board[BOARD_SIZE][BOARD_SIZE] = {0};
 SOCKET sock;
 HANDLE hin;
 HANDLE hout;
-int step;
+int step = 0;
 
 /*
  * UI²¿·Ö 
@@ -239,10 +239,6 @@ void ready()
 			{
 				int rawX = ir[i].Event.MouseEvent.dwMousePosition.X;
 				int rawY = ir[i].Event.MouseEvent.dwMousePosition.Y;
-				
-				memset(buffer, 0, sizeof(buffer));
-			    sprintf(buffer, "%d %d\n", rawX, rawY);
-				showInfo(buffer);
 				
 				if (rawX % 4 == 0 || rawX % 4 == 3 || rawY % 2 == 0) continue;
 				
