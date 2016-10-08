@@ -12,6 +12,9 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
+#define BLACK 0
+#define WHITE 1
+
 #define INFO_X 36
 #define INFO_Y 1
 #define MESSAGE_X 36
@@ -21,6 +24,7 @@ char buffer[MAXBYTE] = {0};
 SOCKET sock;
 HANDLE hin;
 HANDLE hout;
+int step;
 
 /*
  * UI部分 
@@ -116,6 +120,24 @@ void initUI()
 	setColor(0, 7);
 }
 
+void putChessAt(int x, int y)
+{
+	if (step % 2 == BLACK)
+	{
+		setColor(8, 0);
+	}
+	else
+	{
+		setColor(8, 15);	
+	}
+	
+	moveCursorTo(2 * x + 1, 2 * y + 1);
+	printf("●");
+	
+	setColor(0, 7);
+	++step;
+}
+
 
 /*
  * Socket部分 
@@ -169,7 +191,7 @@ void ready()
 
 void turn(int x, int y)
 {
-	
+	putChessAt(x, y);
 }
 
 void win()
