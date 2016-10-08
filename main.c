@@ -21,7 +21,7 @@
 #define MESSAGE_X 100
 #define MESSAGE_Y 20
 
-const char EMPTY_MESSAGE[50] = {32};
+const char *EMPTY_MESSAGE = "                                                  ";
 
 char buffer[MAXBYTE] = {0};
 char board[BOARD_SIZE][BOARD_SIZE] = {0};
@@ -168,7 +168,7 @@ BOOL putChessAt(int x, int y)
 		setColor(8, 15);	
 	}
 	
-	moveCursorTo(2 * x + 1, 2 * y + 1);
+	moveCursorTo(4 * x + 1, 2 * y + 1);
 	printf("¡ñ");
 	
 	setColor(0, 7);
@@ -246,14 +246,13 @@ void ready()
 				
 				if (rawX % 4 == 0 || rawX % 4 == 3 || rawY % 2 == 0) continue;
 				
-				int row = rawX / 2;
-				int col = rawY / 4;
-
+				int x = rawX / 4;
+				int y = rawY / 2;
 				
-				if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && putChessAt(row, col))
+				if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && putChessAt(x, y))
 				{
 			    	memset(buffer, 0, sizeof(buffer));
-			    	sprintf(buffer, "%d %d\n", row, col);
+			    	sprintf(buffer, "%d %d\n", x, y);
 			    	sendTo(buffer, &sock);
 					return;
 				}
@@ -296,9 +295,9 @@ void work()
 		{
 			//TODO: parse
 			char tmp[MAXBYTE] = {0};
-			int row,  col;
-			sscanf(buffer, "%s %d %d", tmp, &row, &col);
-			turn(row, col);
+			int x,  y;
+			sscanf(buffer, "%s %d %d", tmp, &x, &y);
+			turn(x, y);
 		}
 		else if (strstr(buffer, WIN))
 		{
