@@ -12,8 +12,15 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
+#define INFO_X 36
+#define INFO_Y 1
+#define MESSAGE_X 36
+#define MESSAGE_Y 20
+
 char buffer[MAXBYTE] = {0};
 SOCKET sock;
+HANDLE hin;
+HANDLE hout;
 
 /*
  * UI部分 
@@ -21,15 +28,14 @@ SOCKET sock;
  
 void removeScrollBar()
 {
-    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO info;
-    GetConsoleScreenBufferInfo(handle, &info);
+    GetConsoleScreenBufferInfo(hout, &info);
     COORD new_size = 
     {
         info.srWindow.Right - info.srWindow.Left + 1,
         info.srWindow.Bottom - info.srWindow.Top + 1
     };
-    SetConsoleScreenBufferSize(handle, new_size);
+    SetConsoleScreenBufferSize(hout, new_size);
 }
  
 void setConsoleSize(int width, int height)
@@ -43,7 +49,7 @@ void setConsoleSize(int width, int height)
 }
  
 /* 将光标移动到指定位置 */
-void moveCursorTo(HANDLE hout, const int X, const int Y)
+void moveCursorTo(const int X, const int Y)
 {
 	COORD coord;
 	coord.X = X;
@@ -52,17 +58,20 @@ void moveCursorTo(HANDLE hout, const int X, const int Y)
 }
 
 /* 设置指定的颜色 */
-void setColor(HANDLE hout, const int bg_color, const int fg_color)
+void setColor(const int bg_color, const int fg_color)
 {
 	SetConsoleTextAttribute(hout, bg_color * 16 + fg_color);
 }
 
 void initUI()
 {
-	setConsoleSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-	HANDLE hout = GetStdHandle(STD_OUTPUT_HANDLE); 
+	hin = GetStdHandle(STD_INPUT_HANDLE);
+	hout = GetStdHandle(STD_OUTPUT_HANDLE);
 	
-	setColor(hout, 8, 0); 
+	setConsoleSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+	
+	setColor(8, 0);
+	moveCursorTo(0, 0); 
 	
 	printf("  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19\n");
 	printf("A┏━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┓\n");
@@ -104,7 +113,7 @@ void initUI()
 	printf("S┗━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┛\n");
 	
 	
-	setColor(hout, 0, 7);
+	setColor(0, 7);
 }
 
 
@@ -134,10 +143,12 @@ void initSock()
     
     while (connect(sock, (SOCKADDR*)&sockAddr, sizeof(SOCKADDR)))
     {
+    	moveCursorTo(INFO_X, INFO_Y);
     	printf("Connect failed, retry after 5s...\n");
     	sleep(5);
 	}
-    
+	
+    moveCursorTo(INFO_X, INFO_Y);
     printf("Connected");
 }
 
@@ -163,23 +174,26 @@ void turn(int x, int y)
 
 void win()
 {
-	
+	moveCursorTo(INFO_X, INFO_Y);
+	printf("You win!\n");
 }
 
 void lose()
 {
-	
+	moveCursorTo(INFO_X, INFO_Y);
+	printf("You Lose!\n");
 }
 
 void work()
 {
-	initUI();
 	while (TRUE)
     {
     	memset(buffer, 0, sizeof(buffer));
     	//接收服务器传回的数据 
     	recv(sock, buffer, MAXBYTE, NULL);
+    	
     	//输出接收到的数据 
+    	moveCursorTo(MESSAGE_X, MESSAGE_Y);
     	printf("Message form server: %s", buffer);
     	
     	if (strstr(buffer, READY))
@@ -216,7 +230,6 @@ void work()
 int main(){
 	
 	initUI();
-	
 	initSock();
 	work();
 	closeSock();
