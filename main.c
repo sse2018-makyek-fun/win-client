@@ -12,15 +12,19 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
+#define BOARD_SIZE 19
 #define BLACK 0
 #define WHITE 1
 
-#define INFO_X 36
+#define INFO_X 100
 #define INFO_Y 1
-#define MESSAGE_X 36
+#define MESSAGE_X 100
 #define MESSAGE_Y 20
 
+const char EMPTY_MESSAGE[50] = {' '};
+
 char buffer[MAXBYTE] = {0};
+char board[BOARD_SIZE][BOARD_SIZE] = {0};
 SOCKET sock;
 HANDLE hin;
 HANDLE hout;
@@ -67,10 +71,41 @@ void setColor(const int bg_color, const int fg_color)
 	SetConsoleTextAttribute(hout, bg_color * 16 + fg_color);
 }
 
+/* 显示光标 */ 
+void showConsoleCursor(BOOL showFlag)
+{
+	CONSOLE_CURSOR_INFO cursorInfo;
+
+	GetConsoleCursorInfo(hout, &cursorInfo);
+	cursorInfo.bVisible = showFlag; // set the cursor visibility
+	SetConsoleCursorInfo(hout, &cursorInfo);
+}
+
+/* 在指定位置显示字符串 */ 
+void showStrAt(const char *str, int x, int y)
+{
+	moveCursorTo(x, y);
+	printf(EMPTY_MESSAGE);
+	moveCursorTo(x, y);
+	printf(str);
+}
+
+void showInfo(const char *info)
+{
+	showStrAt(info, INFO_X, INFO_Y);
+}
+
+void showMessage(const char *message)
+{
+	showStrAt(message, MESSAGE_X, MESSAGE_Y);
+}
+
 void initUI()
 {
 	hin = GetStdHandle(STD_INPUT_HANDLE);
 	hout = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	showConsoleCursor(FALSE);
 	
 	setConsoleSize(WINDOW_WIDTH, WINDOW_HEIGHT);
 	
@@ -120,8 +155,10 @@ void initUI()
 	setColor(0, 7);
 }
 
-void putChessAt(int x, int y)
+BOOL putChessAt(int x, int y)
 {
+	if (board[x][y] != 0) return FALSE;
+	
 	if (step % 2 == BLACK)
 	{
 		setColor(8, 0);
@@ -136,6 +173,8 @@ void putChessAt(int x, int y)
 	
 	setColor(0, 7);
 	++step;
+	
+	return TRUE;
 }
 
 
@@ -165,13 +204,11 @@ void initSock()
     
     while (connect(sock, (SOCKADDR*)&sockAddr, sizeof(SOCKADDR)))
     {
-    	moveCursorTo(INFO_X, INFO_Y);
-    	printf("Connect failed, retry after 5s...\n");
+    	showInfo("Connect failed, retry after 5s...\n");
     	sleep(5);
 	}
 	
-    moveCursorTo(INFO_X, INFO_Y);
-    printf("Connected");
+    showInfo("Connected\n");
 }
 
 void closeSock()
@@ -186,7 +223,29 @@ void closeSock()
 
 void ready()
 {
+	/* 从CMD里直接点击位置 */ 
+	INPUT_RECORD ir[128];
+	DWORD nRead;
+	COORD xy;
+	UINT i;
+	SetConsoleMode(hin, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
 	
+	while (TRUE)
+	{
+		ReadConsoleInput(hin, ir, 128, &nRead);
+		if (MOUSE_EVENT == ir[i].EventType && FROM_LEFT_1ST_BUTTON_PRESSED == ir[i].Event.MouseEvent.dwButtonState)
+		{
+			int row = ir[i].Event.MouseEvent.dwMousePosition.X / 2;
+			int col = ir[i].Event.MouseEvent.dwMousePosition.Y / 2;
+			if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && putChessAt(row, col))
+			{
+		    	memset(buffer, 0, sizeof(buffer));
+		    	sprintf(buffer, "%d %d\n", row, col);
+		    	sendTo(buffer, &sock);
+				return;
+			}
+		}
+	}
 }
 
 void turn(int x, int y)
@@ -196,14 +255,12 @@ void turn(int x, int y)
 
 void win()
 {
-	moveCursorTo(INFO_X, INFO_Y);
-	printf("You win!\n");
+	showInfo("You win!\n");
 }
 
 void lose()
 {
-	moveCursorTo(INFO_X, INFO_Y);
-	printf("You Lose!\n");
+	showInfo("You Lose!\n");
 }
 
 void work()
@@ -215,8 +272,7 @@ void work()
     	recv(sock, buffer, MAXBYTE, NULL);
     	
     	//输出接收到的数据 
-    	moveCursorTo(MESSAGE_X, MESSAGE_Y);
-    	printf("Message form server: %s", buffer);
+    	showMessage(buffer);
     	
     	if (strstr(buffer, READY))
     	{
@@ -239,13 +295,7 @@ void work()
 			lose();
 		}
     	
-    	int row, col;
-    	scanf("%d %d", &row, &col);
-    	
-    	memset(buffer, 0, sizeof(buffer));
-    	sprintf(buffer, "%d %d\n", row, col);
-    	
-    	sendTo("buffer", &sock);
+
 	}
 }
 
