@@ -16,7 +16,7 @@
 #define BLACK 1
 #define WHITE 2
 
-#define LIST_SIZE 5
+#define LIST_SIZE 10
 #define INFO_X 100
 #define INFO_Y 1
 #define MESSAGE_X 100
@@ -45,17 +45,18 @@ int step = 0;
  * 数据结构部分
  */
  
-void insertStrToList(struct pointer *p, const char *str)
+void insertStrToList(struct pointer **p, const char *str)
 {
-	p = p->prev;
-	strcpy(p->str, str);
+	*p = (*p)->prev;
+	strcpy((*p)->str, str);
 }
  
-void initList(struct pointer *p)
+void initList(struct pointer **p)
 {
 	int i;
 	struct pointer *head, *tail, *tp;
 	head = (struct pointer *) malloc(sizeof(struct pointer));
+	strcpy(head->str, EMPTY_MESSAGE);
 	tail = head;
 	
 	for (i = 1; i < LIST_SIZE; i++)
@@ -69,13 +70,13 @@ void initList(struct pointer *p)
 	
 	head->prev = tail;
 	tail->next = head;
-	p = head;
+	*p = head;
 }
 
 void initVars()
 {
-	initList(infoList);
-	initList(messageList);
+	initList(&infoList);
+	initList(&messageList);
 }
 
 /*
@@ -144,7 +145,14 @@ void showInfo(const char *info)
 
 void showMessage(const char *message)
 {
-	showStrAt(message, MESSAGE_X, MESSAGE_Y);
+	insertStrToList(&messageList, message);
+	struct pointer *p = messageList;
+	int i;
+	for (i = 0; i < LIST_SIZE; i++)
+	{
+		showStrAt(p->str, MESSAGE_X, MESSAGE_Y + i);
+		p = p->next;
+	}
 }
 
 void initUI()
