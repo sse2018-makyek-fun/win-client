@@ -13,8 +13,8 @@
 #define WINDOW_HEIGHT 720
 
 #define BOARD_SIZE 19
-#define BLACK 0
-#define WHITE 1
+#define BLACK 1
+#define WHITE 2
 
 #define INFO_X 100
 #define INFO_Y 1
@@ -159,12 +159,14 @@ BOOL putChessAt(int x, int y)
 {
 	if (board[x][y] != 0) return FALSE;
 	
-	if (step % 2 == BLACK)
+	if (step % 2 + 1 == BLACK)
 	{
+		board[x][y] = BLACK;
 		setColor(8, 0);
 	}
 	else
 	{
+		board[x][y] = WHITE;
 		setColor(8, 15);	
 	}
 	
