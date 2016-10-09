@@ -16,12 +16,23 @@
 #define BLACK 1
 #define WHITE 2
 
+#define LIST_SIZE 5
 #define INFO_X 100
 #define INFO_Y 1
 #define MESSAGE_X 100
 #define MESSAGE_Y 20
 
+struct pointer
+{
+	char str[51];
+	struct pointer *prev;
+	struct pointer *next;
+};
+
 const char *EMPTY_MESSAGE = "                                                  ";
+
+struct pointer *infoList;
+struct pointer *messageList;
 
 char buffer[MAXBYTE] = {0};
 char board[BOARD_SIZE][BOARD_SIZE] = {0};
@@ -31,9 +42,45 @@ HANDLE hout;
 int step = 0;
 
 /*
- * UI部分 
+ * 数据结构部分
  */
  
+void insertStrToList(struct pointer *p, const char *str)
+{
+	p = p->prev;
+	strcpy(p->str, str);
+}
+ 
+void initList(struct pointer *p)
+{
+	int i;
+	struct pointer *head, *tail, *tp;
+	head = (struct pointer *) malloc(sizeof(struct pointer));
+	tail = head;
+	
+	for (i = 1; i < LIST_SIZE; i++)
+	{
+		tp = (struct pointer *) malloc(sizeof(struct pointer));
+		strcpy(tp->str, EMPTY_MESSAGE);
+		tp->next = head;
+		head->prev = tp;
+		head = tp;
+	}
+	
+	head->prev = tail;
+	tail->next = head;
+	p = head;
+}
+
+void initVars()
+{
+	initList(infoList);
+	initList(messageList);
+}
+
+/*
+ * UI部分 
+ */
 void removeScrollBar()
 {
     CONSOLE_SCREEN_BUFFER_INFO info;
@@ -309,7 +356,7 @@ void work()
 }
 
 int main(){
-	
+	initVars();
 	initUI();
 	initSock();
 	work();
