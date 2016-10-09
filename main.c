@@ -141,7 +141,7 @@ void showStrAt(const char *str, int x, int y)
 void showInfo(const char *info)
 {
 	insertStrToList(&infoList, info);
-	struct pointer *p = messageList;
+	struct pointer *p = infoList;
 	int i;
 	for (i = 0; i < LIST_SIZE; i++)
 	{
