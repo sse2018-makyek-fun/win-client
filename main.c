@@ -140,7 +140,14 @@ void showStrAt(const char *str, int x, int y)
 
 void showInfo(const char *info)
 {
-	showStrAt(info, INFO_X, INFO_Y);
+	insertStrToList(&infoList, info);
+	struct pointer *p = messageList;
+	int i;
+	for (i = 0; i < LIST_SIZE; i++)
+	{
+		showStrAt(p->str, INFO_X, INFO_Y + i);
+		p = p->next;
+	}
 }
 
 void showMessage(const char *message)
