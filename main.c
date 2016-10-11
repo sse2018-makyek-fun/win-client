@@ -16,7 +16,7 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
-#define DEFAULT_PORT 22223
+#define DEFAULT_PORT 23333
 
 #define LIST_SIZE 10
 #define INFO_X 100
