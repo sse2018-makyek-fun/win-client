@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <WinSock2.h>
 #include <windows.h>
-#include <unistd.h>
+#include <string.h>
 
 #define READY "READY"
 #define TURN  "TURN" 
@@ -11,6 +11,9 @@
 
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
+
+#define DEFAULT_IP "127.0.0.1"
+#define DEFAULT_PORT 22223
 
 #define BOARD_SIZE 19
 #define BLACK 1
@@ -40,6 +43,46 @@ SOCKET sock;
 HANDLE hin;
 HANDLE hout;
 int step = 0;
+
+/*
+ * 工具部分
+ */
+ 
+BOOL isIp(const char *ip)
+{
+	int num;
+	int flag = TRUE;
+	int counter = 0;
+	
+	memset(buffer, 0, sizeof(buffer));
+	strcpy(buffer, ip);
+	char *p = strtok(buffer, ".");
+	
+	while (p && flag)
+	{
+		num = atoi(p);
+		
+		if (num >= 0 && num <=255 && (counter++ < 4))
+		{
+			flag = TRUE;
+			p = strtok(NULL, ".");
+		}
+		else
+		{
+			flag = FALSE;
+			break;
+		}
+	}
+	
+	return flag && (counter == 4);
+}
+
+BOOL isPort(const char *port)
+{
+	int num;
+	num = atoi(port);
+	return (num >= 0 && num <= 65535);
+}
 
 /*
  * 数据结构部分
@@ -250,7 +293,7 @@ void sendTo(const char *message, SOCKET *sock)
 	send(*sock, message, strlen(message)+sizeof(char), NULL);
 }
 
-void initSock()
+void initSock(const char *ip, const int port)
 {
     //初始化DLL 
     WSADATA wsaData;
@@ -263,9 +306,12 @@ void initSock()
     struct sockaddr_in sockAddr;
     memset(&sockAddr, 0, sizeof(sockAddr));  //每个字节都用0填充 
     sockAddr.sin_family = PF_INET;
-    sockAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    sockAddr.sin_port = htons(23333);
+    sockAddr.sin_addr.s_addr = inet_addr(ip);
+    sockAddr.sin_port = htons(port);
     
+    memset(buffer, 0, sizeof(buffer));
+    sprintf(buffer, "Trying to connect to %s:%d", ip, port);
+    showInfo(buffer);
     while (connect(sock, (SOCKADDR*)&sockAddr, sizeof(SOCKADDR)))
     {
     	showInfo("Connect failed, retry after 5s...\n");
@@ -287,6 +333,7 @@ void closeSock()
 
 void ready()
 {
+	/* TODO: 拆分成人工下棋和AI下棋 */ 
 	/* 从CMD里直接点击位置 */ 
 	INPUT_RECORD ir[128];
 	DWORD nRead;
@@ -370,10 +417,25 @@ void work()
 	}
 }
 
-int main(){
+int main(int argc, char *argv[])
+{
 	initVars();
 	initUI();
-	initSock();
+	
+	if (argc == 3)
+	{
+		const char *ip = argv[1];
+		const int port = atoi(argv[2]);
+		if (isIp(argv[1]) && isPort(argv[2]))
+			initSock(ip, port);
+		else
+			initSock(DEFAULT_IP, DEFAULT_PORT);
+	}
+	else
+	{
+		initSock(DEFAULT_IP, DEFAULT_PORT);
+	}
+	
 	work();
 	closeSock();
 
