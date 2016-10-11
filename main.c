@@ -28,6 +28,8 @@
 struct pointer
 {
 	char str[51];
+	int bgColor;
+	int fgColor;
 	struct pointer *prev;
 	struct pointer *next;
 };
@@ -77,12 +79,11 @@ BOOL isIp(const char *ip)
 	return flag && (counter == 4);
 }
 
-BOOL isPort(const char *port)
+BOOL isPort(const int port)
 {
-	int num;
-	num = atoi(port);
-	return (num >= 0 && num <= 65535);
+	return (port >= 0 && port <= 65535);
 }
+
 
 /*
  * 数据结构部分
@@ -99,12 +100,16 @@ void initList(struct pointer **p)
 	int i;
 	struct pointer *head, *tail, *tp;
 	head = (struct pointer *) malloc(sizeof(struct pointer));
+	head->bgColor = 0;
+	head->fgColor = 7;
 	strcpy(head->str, EMPTY_MESSAGE);
 	tail = head;
 	
 	for (i = 1; i < LIST_SIZE; i++)
 	{
 		tp = (struct pointer *) malloc(sizeof(struct pointer));
+		tp->bgColor = 0;
+		tp->fgColor = 7;
 		strcpy(tp->str, EMPTY_MESSAGE);
 		tp->next = head;
 		head->prev = tp;
@@ -173,22 +178,40 @@ void showConsoleCursor(BOOL showFlag)
 }
 
 /* 在指定位置显示字符串 */ 
-void showStrAt(const char *str, int x, int y)
+void showStrAt(const struct pointer *p, int x, int y)
 {
 	moveCursorTo(x, y);
 	printf(EMPTY_MESSAGE);
 	moveCursorTo(x, y);
-	printf(str);
+	setColor(p->bgColor, p->fgColor);
+	printf(p->str);
+	setColor(0, 7);
 }
 
 void showInfo(const char *info)
 {
 	insertStrToList(&infoList, info);
+	infoList->bgColor = 0;
+	infoList->fgColor = 7;
 	struct pointer *p = infoList;
 	int i;
 	for (i = 0; i < LIST_SIZE; i++)
 	{
-		showStrAt(p->str, INFO_X, INFO_Y + i);
+		showStrAt(p, INFO_X, INFO_Y + i);
+		p = p->next;
+	}
+}
+
+void showInfoWithColor(const char *info, int bgColor, int fgColor)
+{
+	insertStrToList(&infoList, info);
+	infoList->bgColor = bgColor;
+	infoList->fgColor = fgColor;
+	struct pointer *p = infoList;
+	int i;
+	for (i = 0; i < LIST_SIZE; i++)
+	{
+		showStrAt(p, INFO_X, INFO_Y + i);
 		p = p->next;
 	}
 }
@@ -196,11 +219,13 @@ void showInfo(const char *info)
 void showMessage(const char *message)
 {
 	insertStrToList(&messageList, message);
+	messageList->bgColor = 0;
+	messageList->fgColor = 7;
 	struct pointer *p = messageList;
 	int i;
 	for (i = 0; i < LIST_SIZE; i++)
 	{
-		showStrAt(p->str, MESSAGE_X, MESSAGE_Y + i);
+		showStrAt(p, MESSAGE_X, MESSAGE_Y + i);
 		p = p->next;
 	}
 }
@@ -422,11 +447,11 @@ int main(int argc, char *argv[])
 	initVars();
 	initUI();
 	
-	if (argc == 3)
+	if (3 == argc)
 	{
 		const char *ip = argv[1];
 		const int port = atoi(argv[2]);
-		if (isIp(argv[1]) && isPort(argv[2]))
+		if (isIp(ip) && isPort(port))
 			initSock(ip, port);
 		else
 			initSock(DEFAULT_IP, DEFAULT_PORT);
