@@ -12,7 +12,6 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
-#define DEFAULT_IP "127.0.0.1"
 #define DEFAULT_PORT 22223
 
 #define BOARD_SIZE 19
@@ -83,6 +82,22 @@ BOOL isPort(const int port)
 {
 	return (port >= 0 && port <= 65535);
 }
+
+char *getIp()
+{
+	PHOSTENT hostinfo;
+	char name[255];
+	char* ip;
+    if(gethostname(name, sizeof(name)) == 0)
+    {
+        if((hostinfo = gethostbyname(name)) != NULL)
+        {
+            ip = inet_ntoa (*(struct in_addr *)*hostinfo->h_addr_list);
+            return ip;
+        }
+    }
+    return NULL;
+} 
 
 
 /*
@@ -339,11 +354,11 @@ void initSock(const char *ip, const int port)
     showInfo(buffer);
     while (connect(sock, (SOCKADDR*)&sockAddr, sizeof(SOCKADDR)))
     {
-    	showInfo("Connect failed, retry after 5s...\n");
+    	showInfoWithColor("Connect failed, retry after 5s...\n", 0, FOREGROUND_RED);
     	sleep(5);
 	}
 	
-    showInfo("Connected\n");
+    showInfoWithColor("Connected\n", 0, FOREGROUND_GREEN);
 }
 
 void closeSock()
@@ -447,6 +462,7 @@ int main(int argc, char *argv[])
 	initVars();
 	initUI();
 	
+	char *DEFAULT_IP = getIp();
 	if (3 == argc)
 	{
 		const char *ip = argv[1];
