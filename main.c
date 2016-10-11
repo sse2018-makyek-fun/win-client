@@ -3,6 +3,7 @@
 #include <WinSock2.h>
 #include <windows.h>
 #include <string.h>
+#include <iphlpapi.h>
 
 #include "common.h"
 #include "ai.h"
@@ -332,12 +333,15 @@ void sendTo(const char *message, SOCKET *sock)
 	send(*sock, message, strlen(message)+sizeof(char), NULL);
 }
 
-void initSock(const char *ip, const int port)
+void startSock()
 {
     //初始化DLL 
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
-    
+}
+
+void initSock(const char *ip, const int port)
+{
     //创建套接字 
     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     
@@ -485,6 +489,7 @@ int main(int argc, char *argv[])
 {
 	initVars();
 	initUI();
+	startSock();
 	
 	char *DEFAULT_IP = getIp();
 	if (3 == argc)
