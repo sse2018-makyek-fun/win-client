@@ -4,6 +4,9 @@
 #include <windows.h>
 #include <string.h>
 
+#include "common.h"
+#include "ai.h"
+
 #define READY "READY"
 #define TURN  "TURN" 
 #define WIN   "WIN"
@@ -13,10 +16,6 @@
 #define WINDOW_HEIGHT 720
 
 #define DEFAULT_PORT 22223
-
-#define BOARD_SIZE 19
-#define BLACK 1
-#define WHITE 2
 
 #define LIST_SIZE 10
 #define INFO_X 100
@@ -302,7 +301,7 @@ void initUI()
 
 BOOL putChessAt(int x, int y)
 {
-	if (board[x][y] != 0) return FALSE;
+	if (board[x][y] != EMPTY) return FALSE;
 	
 	if (step % 2 + 1 == BLACK)
 	{
@@ -381,6 +380,11 @@ void ready()
 	UINT i;
 	SetConsoleMode(hin, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
 	
+	
+#ifdef DEBUG
+	/*
+	 * 人工部分 
+	 */
 	while (TRUE)
 	{
 		ReadConsoleInput(hin, ir, 128, &nRead);
@@ -406,6 +410,26 @@ void ready()
 			}
 		}
 	}
+#else
+
+	/*
+	 * AI部分 
+	 */
+	 
+	struct Position pos = ai(board);
+	int x = pos.x;
+	int y = pos.y;
+	
+	if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && putChessAt(x, y))
+	{
+	   	memset(buffer, 0, sizeof(buffer));
+	   	sprintf(buffer, "%d %d\n", x, y);
+	   	sendTo(buffer, &sock);
+		return;
+	}
+
+#endif
+	
 }
 
 void turn(int x, int y)
