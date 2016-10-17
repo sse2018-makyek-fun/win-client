@@ -374,55 +374,54 @@ void ready()
 	UINT i;
 	SetConsoleMode(hin, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
 	
-	
-#ifdef DEBUG
-	/*
-	 * 人工部分 
-	 */
-	while (TRUE)
-	{
-		ReadConsoleInput(hin, ir, 128, &nRead);
-		for (i = 0; i < nRead; i++)
+	if (TRUE == globalArgs.DEBUG) {
+		/*
+		 * 人工部分 
+		 */
+		while (TRUE)
 		{
-			if (MOUSE_EVENT == ir[i].EventType && FROM_LEFT_1ST_BUTTON_PRESSED == ir[i].Event.MouseEvent.dwButtonState)
+			ReadConsoleInput(hin, ir, 128, &nRead);
+			for (i = 0; i < nRead; i++)
 			{
-				int rawX = ir[i].Event.MouseEvent.dwMousePosition.X;
-				int rawY = ir[i].Event.MouseEvent.dwMousePosition.Y;
-				
-				if (rawX % 4 == 0 || rawX % 4 == 3 || rawY % 2 == 0) continue;
-				
-				int x = rawX / 4;
-				int y = rawY / 2;
-				
-				if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && putChessAt(x, y))
+				if (MOUSE_EVENT == ir[i].EventType && FROM_LEFT_1ST_BUTTON_PRESSED == ir[i].Event.MouseEvent.dwButtonState)
 				{
-			    	memset(buffer, 0, sizeof(buffer));
-			    	sprintf(buffer, "%d %d\n", x, y);
-			    	sendTo(buffer, &sock);
-					return;
+					int rawX = ir[i].Event.MouseEvent.dwMousePosition.X;
+					int rawY = ir[i].Event.MouseEvent.dwMousePosition.Y;
+					
+					if (rawX % 4 == 0 || rawX % 4 == 3 || rawY % 2 == 0) continue;
+					
+					int x = rawX / 4;
+					int y = rawY / 2;
+					
+					if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && putChessAt(x, y))
+					{
+				    	memset(buffer, 0, sizeof(buffer));
+				    	sprintf(buffer, "%d %d\n", x, y);
+				    	sendTo(buffer, &sock);
+						return;
+					}
 				}
 			}
 		}
 	}
-#else
-
-	/*
-	 * AI部分 
-	 */
-	 
-	struct Position pos = ai(board);
-	int x = pos.x;
-	int y = pos.y;
-	
-	if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && putChessAt(x, y))
+	else
 	{
-	   	memset(buffer, 0, sizeof(buffer));
-	   	sprintf(buffer, "%d %d\n", x, y);
-	   	sendTo(buffer, &sock);
-		return;
+		/*
+		 * AI部分 
+		 */
+		 
+		struct Position pos = ai(board);
+		int x = pos.x;
+		int y = pos.y;
+		
+		if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && putChessAt(x, y))
+		{
+		   	memset(buffer, 0, sizeof(buffer));
+		   	sprintf(buffer, "%d %d\n", x, y);
+		   	sendTo(buffer, &sock);
+			return;
+		}
 	}
-
-#endif
 	
 }
 
