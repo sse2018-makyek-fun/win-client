@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <string.h>
 #include <iphlpapi.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "ai.h"
@@ -16,13 +17,19 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
-#define DEFAULT_PORT 23333
-
 #define LIST_SIZE 10
 #define INFO_X 100
 #define INFO_Y 1
 #define MESSAGE_X 100
 #define MESSAGE_Y 20
+
+struct globalArgs_t {
+	char *ip;
+	int port;
+	BOOL DEBUG;
+} globalArgs;
+
+static const char *optString = "a:p:hD";
 
 struct pointer
 {
@@ -145,26 +152,9 @@ void initVars()
 /*
  * UI部分 
  */
-void removeScrollBar()
-{
-    CONSOLE_SCREEN_BUFFER_INFO info;
-    GetConsoleScreenBufferInfo(hout, &info);
-    COORD new_size = 
-    {
-        info.srWindow.Right - info.srWindow.Left + 1,
-        info.srWindow.Bottom - info.srWindow.Top + 1
-    };
-    SetConsoleScreenBufferSize(hout, new_size);
-}
- 
 void setConsoleSize(int width, int height)
 {
-    HWND console = GetConsoleWindow();
-    RECT r;
-    GetWindowRect(console, &r);
-
-    MoveWindow(console, r.left, r.top, width, height, TRUE);
-    removeScrollBar();
+	system("mode con cols=180 lines=40");
 }
  
 /* 将光标移动到指定位置 */
@@ -485,26 +475,57 @@ void work()
 	}
 }
 
+void display_usage(char *exe)
+{
+	printf("Usage: %s [OPTIONS] \n", exe);
+	printf("  -a address        Server address\n");
+	printf("  -p port           Server port\n");
+	printf("  -D                Debug mode. When set, the user will manually play the chess.\n");
+}
+
+void initArgs(int argc, char *argv[])
+{
+	int opt = 0;
+	globalArgs.DEBUG = FALSE;
+	globalArgs.ip = getIp();
+	globalArgs.port = 23333;
+	
+	opt = getopt(argc, argv, optString);
+	while (opt != -1)
+	{
+		switch (opt)
+		{
+			case 'a':
+				globalArgs.ip = optarg;
+				break;
+			case 'p':
+				globalArgs.port = atoi(optarg);
+				break;
+			case 'D':
+				globalArgs.DEBUG = TRUE;
+				break;
+			case 'h':
+				display_usage(argv[0]);
+				exit(0);
+				break;
+			default:
+				// Illegal!
+				break;
+		}
+		
+		opt = getopt(argc, argv, optString);
+	}
+}
+
 int main(int argc, char *argv[])
 {
-	initVars();
-	initUI();
 	startSock();
 	
-	char *DEFAULT_IP = getIp();
-	if (3 == argc)
-	{
-		const char *ip = argv[1];
-		const int port = atoi(argv[2]);
-		if (isIp(ip) && isPort(port))
-			initSock(ip, port);
-		else
-			initSock(DEFAULT_IP, DEFAULT_PORT);
-	}
-	else
-	{
-		initSock(DEFAULT_IP, DEFAULT_PORT);
-	}
+	initArgs(argc, argv);
+	initVars();
+	initUI();
+	
+	initSock(globalArgs.ip, globalArgs.port);
 	
 	work();
 	closeSock();
