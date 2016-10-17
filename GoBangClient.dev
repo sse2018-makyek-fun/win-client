@@ -18,8 +18,8 @@ ExeOutput=
 ObjectOutput=
 LogOutput=
 LogOutputEnabled=0
-OverrideOutput=0
-OverrideOutputName=GoBangClient.exe
+OverrideOutput=1
+OverrideOutputName=client.exe
 HostApplication=
 UseCustomMakefile=0
 CustomMakefile=
@@ -27,8 +27,8 @@ CommandLine=
 Folders=
 IncludeVersionInfo=0
 SupportXPThemes=0
-CompilerSet=0
-CompilerSettings=0000000000000000000000000
+CompilerSet=1
+CompilerSettings=0000000000000000001000000
 UnitCount=4
 
 [VersionInfo]

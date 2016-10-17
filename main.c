@@ -9,6 +9,8 @@
 #include "common.h"
 #include "ai.h"
 
+#define START "START"
+#define PLACE "PLACE"
 #define READY "READY"
 #define TURN  "TURN" 
 #define WIN   "WIN"
@@ -235,18 +237,12 @@ void showMessage(const char *message)
 	}
 }
 
-void initUI()
+void resetBoard()
 {
-	hin = GetStdHandle(STD_INPUT_HANDLE);
-	hout = GetStdHandle(STD_OUTPUT_HANDLE);
-	
-	showConsoleCursor(FALSE);
-	
-	setConsoleSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-	
 	setColor(8, 0);
 	moveCursorTo(0, 0); 
 	
+	/*
 	printf("  1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19\n");
 	printf("A┏━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┓\n");
 	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
@@ -285,9 +281,53 @@ void initUI()
 	printf("R┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
 	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
 	printf("S┗━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┛\n");
+	*/
+	
+	printf("  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14\n");
+	printf("A┏━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┳━┓\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("B┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("C┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("D┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("E┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("F┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("G┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("H┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("I┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("J┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("K┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("L┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("M┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("N┣━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━╋━┫\n");
+	printf(" ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃  ┃\n");
+	printf("O┗━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┻━┛\n");
 	
 	
 	setColor(0, 7);
+}
+
+void initUI()
+{
+	hin = GetStdHandle(STD_INPUT_HANDLE);
+	hout = GetStdHandle(STD_OUTPUT_HANDLE);
+	
+	showConsoleCursor(FALSE);
+	
+	setConsoleSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+	
+	resetBoard();
 }
 
 BOOL putChessAt(int x, int y)
@@ -451,13 +491,23 @@ void work()
     	//输出接收到的数据 
     	showMessage(buffer);
     	
-    	if (strstr(buffer, READY))
+    	if (strstr(buffer, START))
+    	{
+    		
+		}
+		else if (strstr(buffer, PLACE))
+		{
+			char tmp[MAXBYTE] = {0};
+			int x,  y;
+			sscanf(buffer, "%s %d %d", tmp, &x, &y);
+			turn(x, y);
+		}
+    	else if (strstr(buffer, READY))
     	{
     		ready();
 		}
 		else if (strstr(buffer, TURN))
 		{
-			//TODO: parse
 			char tmp[MAXBYTE] = {0};
 			int x,  y;
 			sscanf(buffer, "%s %d %d", tmp, &x, &y);
