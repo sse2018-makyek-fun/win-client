@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "common.h"
+#include "utils.h"
 #include "ai.h"
 
 #define START "START"
@@ -361,6 +362,7 @@ BOOL putChessAt(int x, int y)
 void sendTo(const char *message, SOCKET *sock)
 {
 	send(*sock, message, strlen(message)+sizeof(char), NULL);
+	Sleep(100);
 }
 
 void startSock()
@@ -368,6 +370,7 @@ void startSock()
     //初始化DLL 
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
+    initSocketBuffer();
 }
 
 void initSock(const char *ip, const int port)
@@ -403,6 +406,10 @@ void closeSock()
     WSACleanup();
 }
 
+void start()
+{
+	
+}
 
 void ready()
 {
@@ -480,7 +487,7 @@ void lose()
 	showInfo("You Lose!\n");
 }
 
-void work()
+void loop()
 {
 	while (TRUE)
     {
@@ -488,39 +495,48 @@ void work()
     	//接收服务器传回的数据 
     	recv(sock, buffer, MAXBYTE, NULL);
     	
-    	//输出接收到的数据 
     	showMessage(buffer);
     	
-    	if (strstr(buffer, START))
+    	addToSocketBuffer(buffer);
+    	
+    	while (hasCommand('\n'))
     	{
-    		
+	    	//输出接收到的数据 
+	    	//showMessage(socketArg);
+	    	
+	    	if (strstr(socketArg, START))
+	    	{
+	    		start();
+			}
+			else if (strstr(socketArg, PLACE))
+			{
+				char tmp[MAXBYTE] = {0};
+				int x,  y;
+				sscanf(socketArg, "%s %d %d", tmp, &x, &y);
+				turn(x, y);
+			}
+	    	else if (strstr(socketArg, READY))
+	    	{
+	    		ready();
+			}
+			else if (strstr(socketArg, TURN))
+			{
+				char tmp[MAXBYTE] = {0};
+				int x,  y;
+				sscanf(socketArg, "%s %d %d", tmp, &x, &y);
+				turn(x, y);
+			}
+			else if (strstr(socketArg, WIN))
+			{
+				win();
+			}
+			else if (strstr(socketArg, LOSE))
+			{
+				lose();
+			}
+		
 		}
-		else if (strstr(buffer, PLACE))
-		{
-			char tmp[MAXBYTE] = {0};
-			int x,  y;
-			sscanf(buffer, "%s %d %d", tmp, &x, &y);
-			turn(x, y);
-		}
-    	else if (strstr(buffer, READY))
-    	{
-    		ready();
-		}
-		else if (strstr(buffer, TURN))
-		{
-			char tmp[MAXBYTE] = {0};
-			int x,  y;
-			sscanf(buffer, "%s %d %d", tmp, &x, &y);
-			turn(x, y);
-		}
-		else if (strstr(buffer, WIN))
-		{
-			win();
-		}
-		else if (strstr(buffer, LOSE))
-		{
-			lose();
-		}
+    	
 	}
 }
 
@@ -576,7 +592,7 @@ int main(int argc, char *argv[])
 	
 	initSock(globalArgs.ip, globalArgs.port);
 	
-	work();
+	loop();
 	closeSock();
 
     return 0;
