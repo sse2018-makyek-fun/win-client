@@ -30,10 +30,12 @@ struct globalArgs_t {
 	char *ip;
 	int port;
 	BOOL DEBUG;
+	char *replayFile;
 } globalArgs;
 
-static const char *optString = "a:p:hD";
+static const char *optString = "a:p:r:hD";
 
+//消息指针 
 struct pointer
 {
 	char str[51];
@@ -43,10 +45,21 @@ struct pointer
 	struct pointer *next;
 };
 
+//复盘指针 
+struct rpointer
+{
+	int x;
+	int y;
+	char origin;
+	struct rpointer *prev;
+	struct rpointer *next;
+};
+
 const char *EMPTY_MESSAGE = "                                                  ";
 
 struct pointer *infoList;
 struct pointer *messageList;
+struct rpointer *replayList;
 
 char buffer[MAXBYTE] = {0};
 char board[BOARD_SIZE][BOARD_SIZE] = {0};
@@ -357,6 +370,17 @@ BOOL putChessAt(int x, int y)
 	return TRUE;
 }
 
+BOOL unPutChessAt(int x, int y, char origin)
+{	
+	moveCursorTo(4 * x + 1, 2 * y + 1);
+	printf(origin);
+	
+	board[x][y] = EMPTY;
+	--step;
+	
+	return TRUE;
+}
+
 
 /*
  * Socket部分 
@@ -415,7 +439,6 @@ void start()
 
 void ready()
 {
-	/* TODO: 拆分成人工下棋和AI下棋 */ 
 	/* 从CMD里直接点击位置 */ 
 	INPUT_RECORD ir[128];
 	DWORD nRead;
@@ -542,12 +565,103 @@ void loop()
 	}
 }
 
+void initReplay()
+{
+	FILE *fp;
+	
+	replayList = (struct rpointer *) malloc(sizeof(struct rpointer));
+	replayList->x = -1;
+	replayList->y = -1;
+	replayList->origin = ' ';
+	replayList->prev = NULL;
+	replayList->next = NULL;
+
+	
+	struct rpointer *tail = replayList;
+	struct rpointer *tp;
+		
+	if ((fp = fopen(globalArgs.replayFile, "r")) == NULL)
+	{
+		showInfo("Replay does not exist!");
+		exit(1);
+	}
+	int x, y;
+	while (fscanf(fp, "%d%d\n", &x, &y) != EOF)
+	{
+		tp = (struct rpointer *) malloc(sizeof(struct rpointer));
+		tp->x = x;
+		tp->y = y;
+		tp->origin = ' ';
+		tp->prev = tail;
+		tp->next = NULL;
+		tail->next = tp;
+		tail = tp;
+	}
+}
+
+void loopR()
+{
+	INPUT_RECORD ir[128];
+	DWORD nRead;
+	UINT i;
+	SetConsoleMode(hin, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
+	
+	// 复盘专用
+	initReplay();
+	
+	struct rpointer *tp = replayList;
+	
+	while (TRUE)
+	{
+		ReadConsoleInput(hin, ir, 128, &nRead);
+		for (i = 0; i < nRead; i++)
+		{
+			if (KEY_EVENT == ir[i].EventType)
+			{
+				if (ir[i].Event.KeyEvent.wVirtualKeyCode == VK_DOWN
+					&& ir[i].Event.KeyEvent.bKeyDown == TRUE)
+				{
+					// 方向键 下
+					if (tp->next == NULL)
+					{
+						showInfo("已经到最后一步啦！");
+					}
+					else
+					{
+						showInfo("下一步");
+						tp = tp->next;
+						tp->origin = board[tp->x][tp->y];
+						turn(tp->x, tp->y);
+					}
+				}
+				else if (ir[i].Event.KeyEvent.wVirtualKeyCode == VK_UP
+					&& ir[i].Event.KeyEvent.bKeyDown == TRUE)
+				{
+					// 方向键 上
+					if (tp->prev == NULL)
+					{
+						showInfo("已经在棋盘初始状态了！");
+					}
+					else
+					{
+						showInfo("上一步");
+						unPutChessAt(tp->x, tp->y, tp->origin);
+						tp = tp->prev;
+					}
+				}
+			}
+			
+		}
+	}
+}
+
 void display_usage(char *exe)
 {
 	printf("Usage: %s [OPTIONS] \n", exe);
 	printf("  -a address        Server address\n");
 	printf("  -p port           Server port\n");
 	printf("  -D                Debug mode. When set, the user will manually play the chess.\n");
+	printf("  -r replay         Replay mode. Should follow with a valid replay file.\n");
 }
 
 void initArgs(int argc, char *argv[])
@@ -556,6 +670,7 @@ void initArgs(int argc, char *argv[])
 	globalArgs.DEBUG = FALSE;
 	globalArgs.ip = getIp();
 	globalArgs.port = 23333;
+	globalArgs.replayFile = NULL;
 	
 	opt = getopt(argc, argv, optString);
 	while (opt != -1)
@@ -571,6 +686,9 @@ void initArgs(int argc, char *argv[])
 			case 'D':
 				globalArgs.DEBUG = TRUE;
 				break;
+			case 'r':
+				globalArgs.replayFile = optarg;
+				break;
 			case 'h':
 				display_usage(argv[0]);
 				exit(0);
@@ -582,6 +700,12 @@ void initArgs(int argc, char *argv[])
 		
 		opt = getopt(argc, argv, optString);
 	}
+	
+	if (NULL != globalArgs.replayFile && access(globalArgs.replayFile, F_OK) == -1)
+	{
+		printf("Replay file is invalid! Exiting...\n");
+		exit(-1);
+	}
 }
 
 int main(int argc, char *argv[])
@@ -592,9 +716,16 @@ int main(int argc, char *argv[])
 	initVars();
 	initUI();
 	
-	initSock(globalArgs.ip, globalArgs.port);
+	if (globalArgs.replayFile != NULL)
+	{
+		loopR();
+	}
+	else
+	{
+		initSock(globalArgs.ip, globalArgs.port);
+		loop();
+	}
 	
-	loop();
 	closeSock();
 
     return 0;
