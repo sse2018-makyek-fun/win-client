@@ -157,7 +157,7 @@ void initVars()
  */
 void setConsoleSize(int width, int height)
 {
-	system("mode con cols=180 lines=40");
+	system("mode con cols=180 lines=41");
 }
  
 /* 将光标移动到指定位置 */
