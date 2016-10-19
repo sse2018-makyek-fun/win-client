@@ -50,7 +50,6 @@ struct rpointer
 {
 	int x;
 	int y;
-	char origin;
 	struct rpointer *prev;
 	struct rpointer *next;
 };
@@ -370,10 +369,49 @@ BOOL putChessAt(int x, int y)
 	return TRUE;
 }
 
-BOOL unPutChessAt(int x, int y, char origin)
+BOOL unPutChessAt(int x, int y)
 {	
 	moveCursorTo(4 * x + 1, 2 * y + 1);
-	printf(origin);
+	
+	setColor(8, 0);
+	if (x == 0 && y == 0)
+	{
+		printf("┏");
+	}
+	else if (x == 0 && y == BOARD_SIZE - 1)
+	{
+		printf("┓");
+	}
+	else if (x == BOARD_SIZE - 1 && y == 0)
+	{
+		printf("┗");
+	}
+	else if (x == BOARD_SIZE - 1 && y == BOARD_SIZE - 1)
+	{
+		printf("┛");
+	}
+	else if (x == 0)
+	{
+		printf("┳");
+	}
+	else if (x == BOARD_SIZE - 1)
+	{
+		printf("┻");
+	}
+	else if (y == 0)
+	{
+		printf("┣");
+	}
+	else if (y == BOARD_SIZE - 1)
+	{
+		printf("┫");
+	}
+	else
+	{
+		printf("╋");
+	}
+	setColor(0, 7);
+	
 	
 	board[x][y] = EMPTY;
 	--step;
@@ -572,7 +610,6 @@ void initReplay()
 	replayList = (struct rpointer *) malloc(sizeof(struct rpointer));
 	replayList->x = -1;
 	replayList->y = -1;
-	replayList->origin = ' ';
 	replayList->prev = NULL;
 	replayList->next = NULL;
 
@@ -591,7 +628,6 @@ void initReplay()
 		tp = (struct rpointer *) malloc(sizeof(struct rpointer));
 		tp->x = x;
 		tp->y = y;
-		tp->origin = ' ';
 		tp->prev = tail;
 		tp->next = NULL;
 		tail->next = tp;
@@ -628,10 +664,11 @@ void loopR()
 					}
 					else
 					{
-						showInfo("下一步");
 						tp = tp->next;
-						tp->origin = board[tp->x][tp->y];
 						turn(tp->x, tp->y);
+						memset(buffer, 0, sizeof(buffer));
+						sprintf(buffer, "第%d步", step);
+						showInfo(buffer);
 					}
 				}
 				else if (ir[i].Event.KeyEvent.wVirtualKeyCode == VK_UP
@@ -644,9 +681,11 @@ void loopR()
 					}
 					else
 					{
-						showInfo("上一步");
-						unPutChessAt(tp->x, tp->y, tp->origin);
+						unPutChessAt(tp->x, tp->y);
 						tp = tp->prev;
+						memset(buffer, 0, sizeof(buffer));
+						sprintf(buffer, "第%d步", step);
+						showInfo(buffer);
 					}
 				}
 			}
