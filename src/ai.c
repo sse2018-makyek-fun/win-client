@@ -3,6 +3,14 @@
 /* START */
 
 /* You can define your own struct or variable here */
+int testVariable = 0;
+
+void initAI()
+{
+	/*
+     * TODO: Initial your variable here£¡ 
+     */
+}
 
 /* me: BLACK or WHITE(defined in common.h */
 struct Position ai(const char board[BOARD_SIZE][BOARD_SIZE], int me)
@@ -28,5 +36,4 @@ struct Position ai(const char board[BOARD_SIZE][BOARD_SIZE], int me)
     
     return preferedPos;
 }
-
 /* END */

@@ -481,6 +481,7 @@ void start()
 {
     memset(board, 0, sizeof(board));
     step = 0;
+    initAI();
 }
 
 void ready()
