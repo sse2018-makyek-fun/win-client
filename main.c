@@ -35,7 +35,7 @@ struct globalArgs_t {
 
 static const char *optString = "a:p:r:hD";
 
-//消息指针 
+//Message and info pointer
 struct pointer
 {
 	char str[51];
@@ -45,7 +45,7 @@ struct pointer
 	struct pointer *next;
 };
 
-//复盘指针 
+//Replay pointer
 struct rpointer
 {
 	int x;
@@ -68,7 +68,7 @@ HANDLE hout;
 int step = 0;
 
 /*
- * 工具部分
+ * Ip Utils
  */
  
 BOOL isIp(const char *ip)
@@ -123,7 +123,7 @@ char *getIp()
 
 
 /*
- * 数据结构部分
+ * List Utils
  */
  
 void insertStrToList(struct pointer **p, const char *str)
@@ -165,14 +165,14 @@ void initVars()
 }
 
 /*
- * UI部分 
+ * UI Utils
  */
 void setConsoleSize(int width, int height)
 {
 	system("mode con cols=180 lines=41");
 }
  
-/* 将光标移动到指定位置 */
+/* Move cursor to specified position in the console */
 void moveCursorTo(const int X, const int Y)
 {
 	COORD coord;
@@ -181,13 +181,16 @@ void moveCursorTo(const int X, const int Y)
 	SetConsoleCursorPosition(hout, coord);
 }
 
-/* 设置指定的颜色 */
+/* 
+ * Set background color and forground color 
+ * See http://baike.baidu.com/item/SetConsoleTextAttribute
+ */
 void setColor(const int bg_color, const int fg_color)
 {
 	SetConsoleTextAttribute(hout, bg_color * 16 + fg_color);
 }
 
-/* 显示光标 */ 
+/* Show cursor */ 
 void showConsoleCursor(BOOL showFlag)
 {
 	CONSOLE_CURSOR_INFO cursorInfo;
@@ -197,7 +200,7 @@ void showConsoleCursor(BOOL showFlag)
 	SetConsoleCursorInfo(hout, &cursorInfo);
 }
 
-/* 在指定位置显示字符串 */ 
+/* Show char at specified position in the console */ 
 void showStrAt(const struct pointer *p, int x, int y)
 {
 	moveCursorTo(x, y);
@@ -208,7 +211,7 @@ void showStrAt(const struct pointer *p, int x, int y)
 	setColor(0, 7);
 }
 
-/* 显示信息（右上方） */ 
+/* Show info（Top-right） */ 
 void showInfo(const char *info)
 {
 	insertStrToList(&infoList, info);
@@ -223,7 +226,7 @@ void showInfo(const char *info)
 	}
 }
 
-/* 显示带颜色的信息 （右上方）*/ 
+/* Show colored info （Top-right）*/ 
 void showInfoWithColor(const char *info, int bgColor, int fgColor)
 {
 	insertStrToList(&infoList, info);
@@ -238,7 +241,7 @@ void showInfoWithColor(const char *info, int bgColor, int fgColor)
 	}
 }
 
-/* 显示接收到的消息 （右下方）*/ 
+/* Show message （Bottom-right）*/ 
 void showMessage(const char *message)
 {
 	insertStrToList(&messageList, message);
@@ -253,7 +256,7 @@ void showMessage(const char *message)
 	}
 }
 
-/* 重置棋盘 */ 
+/* Reset board */ 
 void resetBoard()
 {
 	setColor(8, 0);
@@ -435,7 +438,7 @@ void sendTo(const char *message, SOCKET *sock)
 
 void startSock()
 {
-    //初始化DLL 
+    //Init socket DLL 
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
     initSocketBuffer();
@@ -443,12 +446,12 @@ void startSock()
 
 void initSock(const char *ip, const int port)
 {
-    //创建套接字 
+    //Open socket
     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     
-    //向服务器发送请求 
+    //Connect to socket
     struct sockaddr_in sockAddr;
-    memset(&sockAddr, 0, sizeof(sockAddr));  //每个字节都用0填充 
+    memset(&sockAddr, 0, sizeof(sockAddr));
     sockAddr.sin_family = PF_INET;
     sockAddr.sin_addr.s_addr = inet_addr(ip);
     sockAddr.sin_port = htons(port);
@@ -467,10 +470,10 @@ void initSock(const char *ip, const int port)
 
 void closeSock()
 {
-    //关闭套接字 
+    //Close socket
     closesocket(sock);
     
-    //终止使用DLL 
+    //Close socket DLL
     WSACleanup();
 }
 
@@ -482,7 +485,6 @@ void start()
 
 void ready()
 {
-	/* 从CMD里直接点击位置 */ 
 	INPUT_RECORD ir[128];
 	DWORD nRead;
 	COORD xy;
@@ -491,7 +493,7 @@ void ready()
 	
 	if (TRUE == globalArgs.DEBUG) {
 		/*
-		 * 人工部分 
+		 * For debug
 		 */
 		while (TRUE)
 		{
@@ -522,7 +524,7 @@ void ready()
 	else
 	{
 		/*
-		 * AI部分 
+		 * For AI
 		 */
 		 
 		int flag = 0;
@@ -563,17 +565,14 @@ void loop()
 	while (TRUE)
     {
     	memset(buffer, 0, sizeof(buffer));
-    	//接收服务器传回的数据 
+    	//Receive message from server
     	recv(sock, buffer, MAXBYTE, NULL);
-    	
-    	showMessage(buffer);
     	
     	addToSocketBuffer(buffer);
     	
     	while (hasCommand('\n'))
     	{
-	    	//输出接收到的数据 
-	    	//showMessage(socketArg);
+	    	showMessage(socketArg);
 	    	
 	    	if (strstr(socketArg, START))
 	    	{
@@ -650,7 +649,6 @@ void loopR()
 	UINT i;
 	SetConsoleMode(hin, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
 	
-	// 复盘专用
 	initReplay();
 	
 	struct rpointer *tp = replayList;
@@ -665,34 +663,34 @@ void loopR()
 				if (ir[i].Event.KeyEvent.wVirtualKeyCode == VK_DOWN
 					&& ir[i].Event.KeyEvent.bKeyDown == TRUE)
 				{
-					// 方向键 下
+					// Down key
 					if (tp->next == NULL)
 					{
-						showInfo("已经到最后一步啦！");
+						showInfo("Already at the last step!");
 					}
 					else
 					{
 						tp = tp->next;
 						turn(tp->x, tp->y);
 						memset(buffer, 0, sizeof(buffer));
-						sprintf(buffer, "第%d步", step);
+						sprintf(buffer, "%d step", step);
 						showInfo(buffer);
 					}
 				}
 				else if (ir[i].Event.KeyEvent.wVirtualKeyCode == VK_UP
 					&& ir[i].Event.KeyEvent.bKeyDown == TRUE)
 				{
-					// 方向键 上
+					// Up key
 					if (tp->prev == NULL)
 					{
-						showInfo("已经在棋盘初始状态了！");
+						showInfo("Already at the initial step!");
 					}
 					else
 					{
 						unPutChessAt(tp->x, tp->y);
 						tp = tp->prev;
 						memset(buffer, 0, sizeof(buffer));
-						sprintf(buffer, "第%d步", step);
+						sprintf(buffer, "%d step", step);
 						showInfo(buffer);
 					}
 				}
