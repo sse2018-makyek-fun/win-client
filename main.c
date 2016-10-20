@@ -208,6 +208,7 @@ void showStrAt(const struct pointer *p, int x, int y)
 	setColor(0, 7);
 }
 
+/* 显示信息（右上方） */ 
 void showInfo(const char *info)
 {
 	insertStrToList(&infoList, info);
@@ -222,6 +223,7 @@ void showInfo(const char *info)
 	}
 }
 
+/* 显示带颜色的信息 （右上方）*/ 
 void showInfoWithColor(const char *info, int bgColor, int fgColor)
 {
 	insertStrToList(&infoList, info);
@@ -236,6 +238,7 @@ void showInfoWithColor(const char *info, int bgColor, int fgColor)
 	}
 }
 
+/* 显示接收到的消息 （右下方）*/ 
 void showMessage(const char *message)
 {
 	insertStrToList(&messageList, message);
@@ -250,6 +253,7 @@ void showMessage(const char *message)
 	}
 }
 
+/* 重置棋盘 */ 
 void resetBoard()
 {
 	setColor(8, 0);
@@ -472,7 +476,8 @@ void closeSock()
 
 void start()
 {
-	
+	memset(board, 0, sizeof(board));
+	step = 0;
 }
 
 void ready()
@@ -520,7 +525,10 @@ void ready()
 		 * AI部分 
 		 */
 		 
-		struct Position pos = ai(board);
+		int flag = 0;
+		struct Position pos;
+		if (step % 2 + 1 == BLACK) pos = ai(board, BLACK);
+		else pos = ai(board, WHITE);
 		int x = pos.x;
 		int y = pos.y;
 		

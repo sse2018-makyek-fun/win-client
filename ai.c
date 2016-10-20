@@ -1,6 +1,11 @@
 #include "ai.h"
 
-struct Position ai(const char board[BOARD_SIZE][BOARD_SIZE])
+/* START */
+
+/* You can define your own struct or variable here */
+
+/* me: BLACK or WHITE(defined in common.h */
+struct Position ai(const char board[BOARD_SIZE][BOARD_SIZE], int me)
 {
 	/*
 	 * TODO: Write your own ai here!
@@ -23,3 +28,5 @@ struct Position ai(const char board[BOARD_SIZE][BOARD_SIZE])
 	
 	return preferedPos;
 }
+
+/* END */
