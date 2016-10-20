@@ -18,4 +18,3 @@ int hasCommand(char divider);
 
 
 #endif
-
