@@ -597,7 +597,7 @@ void ready()
         int flag = 0;
         struct Position pos;
         if (step % 2 + 1 == BLACK) pos = aiTurn(board, BLACK, lastX, lastY);
-        else pos = ai(board, WHITE, lastX, lastY);
+        else pos = aiTurn(board, WHITE, lastX, lastY);
         int x = pos.x;
         int y = pos.y;
         

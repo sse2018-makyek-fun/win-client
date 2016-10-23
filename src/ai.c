@@ -74,6 +74,7 @@ struct Position aiTurn(const char board[BOARD_SIZE][BOARD_SIZE], int me, int oth
     struct Position preferedPos;
     
     for (i = 0; i < BOARD_SIZE; i++)
+    {
         for (j = 0; j < BOARD_SIZE; j++)
         {
             if (EMPTY == board[i][j])
@@ -83,7 +84,7 @@ struct Position aiTurn(const char board[BOARD_SIZE][BOARD_SIZE], int me, int oth
                 return preferedPos;
             }
         }
-    
+    }
     
     return preferedPos;
 }
