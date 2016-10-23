@@ -2,18 +2,18 @@
 
 /*
  * YOUR CODE BEGIN
- * ä½ çš„ä»£ç å¼€å§‹
+ * ÄãµÄ´úÂë¿ªÊ¼
  */
  
 /* 
  * You can define your own struct and variable here
- * ä½ å¯ä»¥åœ¨è¿™é‡Œå®šä¹‰ä½ è‡ªå·±çš„ç»“æ„ä½“å’Œå˜é‡
+ * Äã¿ÉÒÔÔÚÕâÀï¶¨ÒåÄã×Ô¼ºµÄ½á¹¹ÌåºÍ±äÁ¿
  */
 
 
 /*
- * You should init your ai here
- * åœ¨è¿™é‡Œåˆå§‹åŒ–ä½ çš„ai
+ * You should init your AI here
+ * ÔÚÕâÀï³õÊ¼»¯ÄãµÄAI
  */
 void initAI()
 {
@@ -25,18 +25,18 @@ void initAI()
  * Warning: This method will only be called when after the initialize ofi the  map, it is your turn to put the chess. 
  * Or this method will not be called.
  * You should return a valid Position variable.
- * æ£‹å±€å¼€å§‹ï¼Œç¬¬ä¸€ä¸ªç”±ä½ æ¥è½å­
- * è¯·æ³¨æ„ï¼šåªæœ‰åœ¨å½“æ£‹å±€åˆå§‹åŒ–åï¼Œè½®åˆ°ä½ è½å­æ—¶æ‰ä¼šè§¦å‘è¿™ä¸ªå‡½æ•°ã€‚å¦‚æœåœ¨æ£‹å±€åˆå§‹åŒ–åï¼Œè½®åˆ°å¯¹æ–¹è½å­æ—¶ï¼Œè¿™ä¸ªå‡½æ•°ä¸ä¼šè¢«è§¦å‘ã€‚è¯¦è§é¡¹ç›®è¦æ±‚ã€‚
- * meçš„å–å€¼åªå¯èƒ½æ˜¯ME(1)ï¼Œå³board(æ£‹ç›˜)ä¸Šä¸ºME(1)çš„ä½ç½®è¡¨ç¤ºä½ çš„æ£‹å­ï¼Œboard(æ£‹ç›˜)ä¸Šä¸ºOTHER(2)çš„ä½ç½®è¡¨ç¤ºå¯¹æ‰‹çš„æ£‹å­ã€‚
- * è¿”å›ä¸€ä¸ªç»“æ„ä½“Positionï¼Œä½ éœ€è¦å¡«å……å…¶ä¸­çš„xå±æ€§å’Œyå±æ€§ã€‚
+ * Æå¾Ö¿ªÊ¼£¬Ê×ÏÈÓÉÄãÀ´Âä×Ó
+ * Çë×¢Òâ£ºÖ»ÓĞÔÚµ±Æå¾Ö³õÊ¼»¯ºó£¬ÂÖµ½ÄãÂä×ÓÊ±²Å»á´¥·¢Õâ¸öº¯Êı¡£Èç¹ûÔÚÆå¾Ö³õÊ¼»¯Íê±Ïºó£¬ÂÖµ½¶ÔÊÖÂä×Ó£¬ÔòÕâ¸öº¯Êı²»»á±»´¥·¢¡£Ïê¼ûÏîÄ¿ÒªÇó¡£
+ * ÔÚÕâÀï£¬meµÄÈ¡ÖµÖ»¿ÉÄÜÊÇME(1)£¬¼´board(ÆåÅÌ)ÉÏÎªME(1)µÄÎ»ÖÃ±íÊ¾ÄãµÄÆå×Ó£¬board(ÆåÅÌ)ÉÏÎªOTHER(2)µÄÎ»ÖÃ±íÊ¾¶ÔÊÖµÄÆå×Ó¡£
+ * ÄãĞèÒª·µ»ØÒ»¸ö½á¹¹ÌåPosition£¬ÔÚxÊôĞÔºÍyÊôĞÔÌîÉÏÄãÏëÒªÂä×ÓµÄÎ»ÖÃ¡£ 
  */
 struct Position aiBegin(const char board[BOARD_SIZE][BOARD_SIZE], int me)
 {
     /*
      * TODO: Write your own ai here!
      * Here is a simple AI which just put chess at empty position!
-     * å¾…åš: åœ¨è¿™é‡Œå†™ä¸‹ä½ çš„AI
-     * è¿™é‡Œæœ‰ä¸€ä¸ªåªä¼šå¯»æ‰¾ç¬¬ä¸€ä¸ªå¯ä¸‹ä½ç½®çš„äººå·¥æ™ºéšœï¼
+     * ´ú×ö£ºÔÚÕâÀïĞ´ÏÂÄãµÄAI¡£ 
+     * ÕâÀïÓĞÒ»¸öÊ¾ÀıAI£¬ËüÖ»»áÑ°ÕÒµÚÒ»¸ö¿ÉÏÂµÄÎ»ÖÃ½øĞĞÂä×Ó¡£ 
      */
     int i, j;
     struct Position preferedPos;
@@ -58,17 +58,17 @@ struct Position aiBegin(const char board[BOARD_SIZE][BOARD_SIZE], int me)
 /*
  * Game ongoing, the competitor put the chess at the position (otherX, otherY). You should put your chess.
  * You should return a valid Position variable.
- * æ£‹å±€è¿›è¡Œä¸­ï¼Œå¯¹æ–¹è½å­åœ¨(otherX, otherY)çš„ä½ç½®ï¼Œè½®åˆ°ä½ è½å­äº†ã€‚
- * meçš„å–å€¼åªå¯èƒ½æ˜¯ME(1)ï¼Œå³board(æ£‹ç›˜)ä¸Šä¸ºME(1)çš„ä½ç½®è¡¨ç¤ºä½ çš„æ£‹å­ï¼Œboard(æ£‹ç›˜)ä¸Šä¸ºOTHER(2)çš„ä½ç½®è¡¨ç¤ºå¯¹æ‰‹çš„æ£‹å­ã€‚
- * è¿”å›ä¸€ä¸ªç»“æ„ä½“Positionï¼Œä½ éœ€è¦å¡«å……å…¶ä¸­çš„xå±æ€§å’Œyå±æ€§ã€‚
+ * Æå¾Ö½øĞĞÖĞ£¬¶Ô·½ÉÏÒ»²½Âä×ÓÔÚ(otherX, otherY)µÄÎ»ÖÃ£¬ÂÖµ½ÄãÂä×ÓÁË¡£
+ * ÔÚÕâÀï£¬meµÄÈ¡ÖµÖ»¿ÉÄÜÊÇME(1)£¬¼´board(ÆåÅÌ)ÉÏÎªME(1)µÄÎ»ÖÃ±íÊ¾ÄãµÄÆå×Ó£¬board(ÆåÅÌ)ÉÏÎªOTHER(2)µÄÎ»ÖÃ±íÊ¾¶ÔÊÖµÄÆå×Ó¡£
+ * ÄãĞèÒª·µ»ØÒ»¸ö½á¹¹ÌåPosition£¬ÔÚxÊôĞÔºÍyÊôĞÔÌîÉÏÄãÏëÒªÂä×ÓµÄÎ»ÖÃ¡£ 
  */
 struct Position aiTurn(const char board[BOARD_SIZE][BOARD_SIZE], int me, int otherX, int otherY)
 {
     /*
      * TODO: Write your own ai here!
      * Here is a simple AI which just put chess at empty position!
-     * å¾…åš: åœ¨è¿™é‡Œå†™ä¸‹ä½ çš„AI
-     * è¿™é‡Œæœ‰ä¸€ä¸ªåªä¼šå¯»æ‰¾ç¬¬ä¸€ä¸ªå¯ä¸‹ä½ç½®çš„äººå·¥æ™ºéšœï¼
+     * ´ú×ö£ºÔÚÕâÀïĞ´ÏÂÄãµÄAI¡£ 
+     * ÕâÀïÓĞÒ»¸öÊ¾ÀıAI£¬ËüÖ»»áÑ°ÕÒµÚÒ»¸ö¿ÉÏÂµÄÎ»ÖÃ½øĞĞÂä×Ó¡£ 
      */
     int i, j;
     struct Position preferedPos;
@@ -91,5 +91,5 @@ struct Position aiTurn(const char board[BOARD_SIZE][BOARD_SIZE], int me, int oth
 
 /*
  * YOUR CODE END
- * ä½ çš„ä»£ç ç»“æŸ
+ * ÄãµÄ´úÂë½áÊø 
  */
