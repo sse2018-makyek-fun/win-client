@@ -534,8 +534,8 @@ void begin()
          
         int flag = 0;
         struct Position pos;
-        if (step % 2 + 1 == BLACK) pos = aiBegin(board, BLACK);
-        else pos = aiBegin(board, WHITE);
+        if (step % 2 + 1 == BLACK) pos = aiBegin((const char (*)[20])board, BLACK);
+        else pos = aiBegin((const char (*)[20])board, WHITE);
         int x = pos.x;
         int y = pos.y;
         
@@ -596,8 +596,8 @@ void ready()
          
         int flag = 0;
         struct Position pos;
-        if (step % 2 + 1 == BLACK) pos = aiTurn(board, BLACK, lastX, lastY);
-        else pos = aiTurn(board, WHITE, lastX, lastY);
+        if (step % 2 + 1 == BLACK) pos = aiTurn((const char (*)[20])board, BLACK, lastX, lastY);
+        else pos = aiTurn((const char (*)[20])board, WHITE, lastX, lastY);
         int x = pos.x;
         int y = pos.y;
         
