@@ -12,11 +12,8 @@
 
 #define START "START"
 #define PLACE "PLACE"
-#define BEGIN "BEGIN"
-#define READY "READY"
-#define TURN  "TURN" 
-#define WIN   "WIN"
-#define LOSE  "LOSE"
+#define TURN  "TURN"
+#define END   "END"
 
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
@@ -27,18 +24,18 @@
 #define MESSAGE_X 100
 #define MESSAGE_Y 20
 
+const int DIR[4][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1} };
+
 struct globalArgs_t {
     char *ip;
     int port;
     BOOL DEBUG;
-    char *replayFile;
 } globalArgs;
 
-static const char *optString = "a:p:r:hD";
+static const char *optString = "a:p:hD";
 
 //Message and info pointer
-struct pointer
-{
+struct pointer {
     char str[51];
     int bgColor;
     int fgColor;
@@ -47,8 +44,7 @@ struct pointer
 };
 
 //Replay pointer
-struct rpointer
-{
+struct rpointer {
     int x;
     int y;
     struct rpointer *prev;
@@ -66,39 +62,35 @@ char board[BOARD_SIZE][BOARD_SIZE] = {0};
 SOCKET sock;
 HANDLE hin;
 HANDLE hout;
-int lastX, lastY;
-int step = 0;
+int lastX, lastY, lastOption;
+int meFlag, otherFlag;
 
 /*
  * Ip Utils
  */
- 
+
 BOOL isIp(const char *ip)
 {
     int num;
     int flag = TRUE;
     int counter = 0;
-    
+
     memset(buffer, 0, sizeof(buffer));
     strcpy(buffer, ip);
     char *p = strtok(buffer, ".");
-    
-    while (p && flag)
-    {
+
+    while (p && flag) {
         num = atoi(p);
-        
-        if (num >= 0 && num <=255 && (counter++ < 4))
-        {
+
+        if (num >= 0 && num <=255 && (counter++ < 4)) {
             flag = TRUE;
             p = strtok(NULL, ".");
-        }
-        else
-        {
+        } else {
             flag = FALSE;
             break;
         }
     }
-    
+
     return flag && (counter == 4);
 }
 
@@ -112,28 +104,26 @@ char *getIp()
     PHOSTENT hostinfo;
     char name[255];
     char* ip;
-    if(gethostname(name, sizeof(name)) == 0)
-    {
-        if((hostinfo = gethostbyname(name)) != NULL)
-        {
+    if(gethostname(name, sizeof(name)) == 0) {
+        if((hostinfo = gethostbyname(name)) != NULL) {
             ip = inet_ntoa (*(struct in_addr *)*hostinfo->h_addr_list);
             return ip;
         }
     }
     return NULL;
-} 
+}
 
 
 /*
  * List Utils
  */
- 
+
 void insertStrToList(struct pointer **p, const char *str)
 {
     *p = (*p)->prev;
     strcpy((*p)->str, str);
 }
- 
+
 void initList(struct pointer **p)
 {
     int i;
@@ -143,9 +133,8 @@ void initList(struct pointer **p)
     head->fgColor = 7;
     strcpy(head->str, EMPTY_MESSAGE);
     tail = head;
-    
-    for (i = 1; i < LIST_SIZE; i++)
-    {
+
+    for (i = 1; i < LIST_SIZE; i++) {
         tp = (struct pointer *) malloc(sizeof(struct pointer));
         tp->bgColor = 0;
         tp->fgColor = 7;
@@ -154,7 +143,7 @@ void initList(struct pointer **p)
         head->prev = tp;
         head = tp;
     }
-    
+
     head->prev = tail;
     tail->next = head;
     *p = head;
@@ -173,7 +162,7 @@ void setConsoleSize(int width, int height)
 {
     system("mode con cols=180 lines=42");
 }
- 
+
 /* Move cursor to specified position in the console */
 void moveCursorTo(const int X, const int Y)
 {
@@ -183,8 +172,8 @@ void moveCursorTo(const int X, const int Y)
     SetConsoleCursorPosition(hout, coord);
 }
 
-/* 
- * Set background color and forground color 
+/*
+ * Set background color and forground color
  * See http://baike.baidu.com/item/SetConsoleTextAttribute
  */
 void setColor(const int bg_color, const int fg_color)
@@ -192,7 +181,7 @@ void setColor(const int bg_color, const int fg_color)
     SetConsoleTextAttribute(hout, bg_color * 16 + fg_color);
 }
 
-/* Show cursor */ 
+/* Show cursor */
 void showConsoleCursor(BOOL showFlag)
 {
     CONSOLE_CURSOR_INFO cursorInfo;
@@ -213,21 +202,6 @@ void showStrAt(const struct pointer *p, int x, int y)
     setColor(0, 7);
 }
 
-/* Show info(Top-right) */
-void showInfo(const char *info)
-{
-    insertStrToList(&infoList, info);
-    infoList->bgColor = 0;
-    infoList->fgColor = 7;
-    struct pointer *p = infoList;
-    int i;
-    for (i = 0; i < LIST_SIZE; i++)
-    {
-        showStrAt(p, INFO_X, INFO_Y + i);
-        p = p->next;
-    }
-}
-
 /* Show colored info(Top-right) */
 void showInfoWithColor(const char *info, int bgColor, int fgColor)
 {
@@ -236,109 +210,65 @@ void showInfoWithColor(const char *info, int bgColor, int fgColor)
     infoList->fgColor = fgColor;
     struct pointer *p = infoList;
     int i;
-    for (i = 0; i < LIST_SIZE; i++)
-    {
+    for (i = 0; i < LIST_SIZE; i++) {
         showStrAt(p, INFO_X, INFO_Y + i);
         p = p->next;
     }
 }
 
-/* Show message(Bottom-right)*/ 
-void showMessage(const char *message)
+/* Show info(Top-right) */
+void showInfo(const char *info)
+{
+	showInfoWithColor(info, 0, 7);
+}
+
+/* Show colored message(Bottom-right)*/
+void showMessageWithColor(const char *message, int bgColor, int fgColor)
 {
     insertStrToList(&messageList, message);
-    messageList->bgColor = 0;
-    messageList->fgColor = 7;
+    messageList->bgColor = bgColor;
+    messageList->fgColor = fgColor;
     struct pointer *p = messageList;
     int i;
-    for (i = 0; i < LIST_SIZE; i++)
-    {
+    for (i = 0; i < LIST_SIZE; i++) {
         showStrAt(p, MESSAGE_X, MESSAGE_Y + i);
         p = p->next;
     }
 }
 
-/* Reset board */ 
+/* Show message(Bottom-right)*/
+void showMessage(const char *message)
+{
+	showMessageWithColor(message, 0, 7);
+}
+
+
+
+/* Reset board */
 void resetBoard()
 {
     setColor(8, 0);
-    moveCursorTo(0, 0); 
-    
-    printf("  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19\n");
-    printf("A©³©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©·\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("B©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("C©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("D©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("E©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("F©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("G©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("H©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("I©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("J©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("K©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("L©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("M©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("N©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("O©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("P©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("Q©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("R©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("S©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("T©»©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©¿\n");
-    
-    /*
-    printf("  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14\n");
-    printf("A©³©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©·\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("B©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("C©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("D©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("E©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("F©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("G©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("H©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("I©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("J©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("K©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("L©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("M©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("N©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï\n");
-    printf(" ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§\n");
-    printf("O©»©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©¿\n");
-    */
-    
-    
+    moveCursorTo(0, 0);
+
+    printf("    A   B   C   D   E   F   G   H    \n");
+    printf("  ©³©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©· \n");
+    printf(" 0©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 1©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 2©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 3©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 4©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 5©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 6©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 7©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©»©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©¿ \n");
+
     setColor(0, 7);
 }
 
@@ -346,85 +276,79 @@ void initUI()
 {
     hin = GetStdHandle(STD_INPUT_HANDLE);
     hout = GetStdHandle(STD_OUTPUT_HANDLE);
-    
+
     showConsoleCursor(FALSE);
-    
+
     setConsoleSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-    
+
     resetBoard();
 }
 
-BOOL putChessAt(int x, int y)
+BOOL inBoard(int x, int y)
 {
-    if (board[x][y] != EMPTY) return FALSE;
-    
-    if (step % 2 + 1 == BLACK)
-    {
-        board[x][y] = BLACK;
-        setColor(8, 0);
-    }
-    else
-    {
-        board[x][y] = WHITE;
-        setColor(8, 15);    
-    }
-    
-    moveCursorTo(4 * x + 1, 2 * y + 1);
-    printf("¡ñ");
-    
-    setColor(0, 7);
-    ++step;
-    
-    return TRUE;
+    return x >= 0 && y >= 0 && x < BOARD_SIZE && y < BOARD_SIZE;
 }
 
-BOOL unPutChessAt(int x, int y)
-{   
-    moveCursorTo(4 * x + 1, 2 * y + 1);
-    
-    setColor(8, 0);
-    if (x == 0 && y == 0)
+void drawChess(int x, int y, char* ch)
+{
+	moveCursorTo(4 * y + 4, 2 * x + 2);
+	printf(ch);
+	return;
+}
+
+BOOL moveChess(int x, int y, int option, int meFlag)
+{
+	int otherFlag = 3 - meFlag;
+	int i;
+	
+	if (option < UP || option > RIGHT) return FALSE;
+	
+	int nextx = x + DIR[option][0];
+	int nexty = y + DIR[option][1];
+
+    if (!inBoard(x, y) || !inBoard(nextx, nexty) || board[x][y] != meFlag && board[nextx][nexty] != EMPTY)
     {
-        printf("©³");
+        return FALSE;
     }
-    else if (x == 0 && y == BOARD_SIZE - 1)
-    {
-        printf("©·");
+
+    if (meFlag == BLACK) {
+        setColor(8, 0);
+    } else {
+        setColor(8, 15);
     }
-    else if (x == BOARD_SIZE - 1 && y == 0)
-    {
-        printf("©»");
-    }
-    else if (x == BOARD_SIZE - 1 && y == BOARD_SIZE - 1)
-    {
-        printf("©¿");
-    }
-    else if (x == 0)
-    {
-        printf("©×");
-    }
-    else if (x == BOARD_SIZE - 1)
-    {
-        printf("©ß");
-    }
-    else if (y == 0)
-    {
-        printf("©Ç");
-    }
-    else if (y == BOARD_SIZE - 1)
-    {
-        printf("©Ï");
-    }
-    else
-    {
-        printf("©ï");
-    }
-    setColor(0, 7);
-    
     
     board[x][y] = EMPTY;
-    --step;
+    drawChess(x, y, " ");
+    board[nextx][nexty] = meFlag;
+    drawChess(nextx, nexty, "¡ñ");
     
+    // Mak
+    for (i = 0; i < 4; i++)
+    {
+		if (inBoard(nextx + 2 * DIR[i][0], nexty + 2 * DIR[i][1]) &&
+			board[nextx + DIR[i][0]][nexty + DIR[i][1]] == otherFlag && board[nextx + 2 * DIR[i][0]][nexty + 2 * DIR[i][1]] == meFlag)
+		{
+			board[nextx + DIR[i][0]][nexty + DIR[i][1]] = meFlag;
+			drawChess(nextx + DIR[i][0], nexty + DIR[i][1], "¡ñ");
+		}
+	}
+    
+    // Yak
+	if (nexty - 1 >= 0 && nexty + 1 < BOARD_SIZE && board[nextx][nexty - 1] == otherFlag && board[nextx][nexty + 1] == otherFlag)
+	{
+		board[nextx][nexty - 1] = board[nextx][nexty + 1] = meFlag;
+		drawChess(nextx, nexty - 1, "¡ñ");
+		drawChess(nextx, nexty + 1, "¡ñ");
+	}
+	if (nextx - 1 >= 0 && nextx + 1 < BOARD_SIZE && board[nextx - 1][nexty] == otherFlag && board[nextx + 1][nexty] == otherFlag)
+	{
+		board[nextx - 1][nexty] = board[nextx + 1][nexty] = meFlag;
+		drawChess(nextx - 1, nexty, "¡ñ");
+		drawChess(nextx + 1, nexty, "¡ñ");
+	}
+
+    setColor(0, 7);
+
     return TRUE;
 }
 
@@ -434,13 +358,13 @@ BOOL unPutChessAt(int x, int y)
  */
 void sendTo(const char *message, SOCKET *sock)
 {
-    send(*sock, message, strlen(message)+sizeof(char), NULL);
+    send(*sock, message, strlen(message)+sizeof(char), 0);
     Sleep(100);
 }
 
 void startSock()
 {
-    //Init socket DLL 
+    //Init socket DLL
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
     initSocketBuffer();
@@ -450,23 +374,22 @@ void initSock(const char *ip, const int port)
 {
     //Open socket
     sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    
+
     //Connect to socket
     struct sockaddr_in sockAddr;
     memset(&sockAddr, 0, sizeof(sockAddr));
     sockAddr.sin_family = PF_INET;
     sockAddr.sin_addr.s_addr = inet_addr(ip);
     sockAddr.sin_port = htons(port);
-    
+
     memset(buffer, 0, sizeof(buffer));
     sprintf(buffer, "Trying to connect to %s:%d", ip, port);
     showInfo(buffer);
-    while (connect(sock, (SOCKADDR*)&sockAddr, sizeof(SOCKADDR)))
-    {
+    while (connect(sock, (SOCKADDR*)&sockAddr, sizeof(SOCKADDR))) {
         showInfoWithColor("Connect failed, retry after 5s...\n", 0, FOREGROUND_RED);
         sleep(5);
     }
-    
+
     showInfoWithColor("Connected\n", 0, FOREGROUND_GREEN);
 }
 
@@ -474,302 +397,189 @@ void closeSock()
 {
     //Close socket
     closesocket(sock);
-    
+
     //Close socket DLL
     WSACleanup();
 }
 
 void start()
 {
+	int k;
     memset(board, 0, sizeof(board));
-    step = 0;
+    
+    for (k = 0; k < 8; k++)
+    {
+    	setColor(8, 0);
+    	board[0][k] = BLACK;
+    	drawChess(0, k, "¡ñ");
+    	board[2][k] = BLACK;
+    	drawChess(2, k, "¡ñ");
+    	
+        setColor(8, 15);
+    	board[5][k] = WHITE;
+    	drawChess(5, k, "¡ñ");
+    	board[7][k] = WHITE;
+    	drawChess(7, k, "¡ñ");
+	}
+	
+	setColor(0, 7);
+	
+	if (meFlag == BLACK)
+		showInfoWithColor("You are BLACK!", 0, FOREGROUND_GREEN);
+	else
+		showInfoWithColor("You are WHITE!", 0, FOREGROUND_GREEN);
+    
+    
     lastX = 0;
     lastY = 0;
-    initAI();
+    lastOption = 0;
+    initAI(meFlag);
 }
 
-void begin()
+void turn()
 {
     INPUT_RECORD ir[128];
     DWORD nRead;
     COORD xy;
-    UINT i;
+    UINT i, j;
     SetConsoleMode(hin, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
-    
+
     if (TRUE == globalArgs.DEBUG) {
         /*
          * For debug
          */
-        while (TRUE)
-        {
+        showMessageWithColor("Please move your chess!\n", 0, FOREGROUND_GREEN);
+        struct Command command = {-1, -1, 0};
+        while (TRUE) {
             ReadConsoleInput(hin, ir, 128, &nRead);
-            for (i = 0; i < nRead; i++)
-            {
-                if (MOUSE_EVENT == ir[i].EventType && FROM_LEFT_1ST_BUTTON_PRESSED == ir[i].Event.MouseEvent.dwButtonState)
-                {
+            for (i = 0; i < nRead; i++) {
+                if (MOUSE_EVENT == ir[i].EventType && FROM_LEFT_1ST_BUTTON_PRESSED == ir[i].Event.MouseEvent.dwButtonState) {
                     int rawX = ir[i].Event.MouseEvent.dwMousePosition.X;
                     int rawY = ir[i].Event.MouseEvent.dwMousePosition.Y;
                     
-                    if (rawX % 4 == 0 || rawX % 4 == 3 || rawY % 2 == 0) continue;
+                    if (rawX % 4 != 0 || rawY % 2 != 0) continue;
+
+                    int y = rawX / 4 - 1;
+                    int x = rawY / 2 - 1;
+
+                    if (!inBoard(x, y)) continue;
                     
-                    int x = rawX / 4;
-                    int y = rawY / 2;
-                    
-                    if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && putChessAt(x, y))
+                    if (board[x][y] == meFlag)
                     {
-                        memset(buffer, 0, sizeof(buffer));
-                        sprintf(buffer, "%d %d\n", x, y);
-                        sendTo(buffer, &sock);
-                        return;
-                    }
+	                    memset(buffer, 0, sizeof(buffer));
+	                    sprintf(buffer, "Choose x = %d, y = %d\n", x, y);
+                    	showMessage(buffer);
+                		command.x = x;
+                		command.y = y;
+                	}
+                	else if (board[x][y] == EMPTY)
+                	{
+                		if (inBoard(command.x, command.y))
+                		{
+                			int dx = x - command.x, dy = y - command.y;
+                			for (j = 0; j < 4; j++)
+                			{
+                				if (dx == DIR[j][0] && dy == DIR[j][1])
+                				{
+									if (moveChess(command.x, command.y, j, meFlag)) {
+										memset(buffer, 0, sizeof(buffer));
+				                        sprintf(buffer, "%d %d %d\n", command.x, command.y, j);
+				                        showMessage(buffer);
+				                        sendTo(buffer, &sock);
+				                        return;
+				                    }
+								}
+							}
+						}
+					}
                 }
             }
         }
-    }
-    else
-    {
+    } else {
         /*
          * For AI
          */
-         
-        int flag = 0;
-        struct Position pos;
-        if (step % 2 + 1 == BLACK) pos = aiBegin((const char (*)[20])board, BLACK);
-        else pos = aiBegin((const char (*)[20])board, WHITE);
-        int x = pos.x;
-        int y = pos.y;
-        
-        if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && putChessAt(x, y))
-        {
-            memset(buffer, 0, sizeof(buffer));
-            sprintf(buffer, "%d %d\n", x, y);
-            sendTo(buffer, &sock);
-            return;
-        }
+		
+		while (TRUE)
+		{
+	        struct Command command = aiTurn((const char (*)[BOARD_SIZE])board, meFlag);
+	        int x = command.x;
+	        int y = command.y;
+	        int option = command.option;
+	        if (moveChess(x, y, option, meFlag)) {
+	            memset(buffer, 0, sizeof(buffer));
+	            sprintf(buffer, "%d %d %d\n", x, y, option);
+	            showMessage(buffer);
+	            sendTo(buffer, &sock);
+	            return;
+	        }
+    	}
     }
-    
+
 }
 
-void ready()
+void place(int x, int y, int option)
 {
-    INPUT_RECORD ir[128];
-    DWORD nRead;
-    COORD xy;
-    UINT i;
-    SetConsoleMode(hin, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
-    
-    if (TRUE == globalArgs.DEBUG) {
-        /*
-         * For debug
-         */
-        while (TRUE)
-        {
-            ReadConsoleInput(hin, ir, 128, &nRead);
-            for (i = 0; i < nRead; i++)
-            {
-                if (MOUSE_EVENT == ir[i].EventType && FROM_LEFT_1ST_BUTTON_PRESSED == ir[i].Event.MouseEvent.dwButtonState)
-                {
-                    int rawX = ir[i].Event.MouseEvent.dwMousePosition.X;
-                    int rawY = ir[i].Event.MouseEvent.dwMousePosition.Y;
-                    
-                    if (rawX % 4 == 0 || rawX % 4 == 3 || rawY % 2 == 0) continue;
-                    
-                    int x = rawX / 4;
-                    int y = rawY / 2;
-                    
-                    if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && putChessAt(x, y))
-                    {
-                        memset(buffer, 0, sizeof(buffer));
-                        sprintf(buffer, "%d %d\n", x, y);
-                        sendTo(buffer, &sock);
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    else
-    {
-        /*
-         * For AI
-         */
-         
-        int flag = 0;
-        struct Position pos;
-        if (step % 2 + 1 == BLACK) pos = aiTurn((const char (*)[20])board, BLACK, lastX, lastY);
-        else pos = aiTurn((const char (*)[20])board, WHITE, lastX, lastY);
-        int x = pos.x;
-        int y = pos.y;
-        
-        if (x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE && putChessAt(x, y))
-        {
-            memset(buffer, 0, sizeof(buffer));
-            sprintf(buffer, "%d %d\n", x, y);
-            sendTo(buffer, &sock);
-            return;
-        }
-    }
-    
+    moveChess(x, y, option, otherFlag);
 }
 
-void turn(int x, int y)
+void draw()
 {
-    putChessAt(x, y);
+    showInfo("Draw!\n");
 }
 
 void win()
 {
-    showInfo("You win!\n");
+    showInfoWithColor("You win!\n", 0, FOREGROUND_GREEN);
 }
 
 void lose()
 {
-    showInfo("You Lose!\n");
+    showInfoWithColor("You Lose!\n", 0, FOREGROUND_RED);
+}
+
+void end(int result)
+{
+    if (result == 0)
+        draw();
+    else if (result == meFlag)
+        win();
+    else
+        lose();
 }
 
 void loop()
 {
-    while (TRUE)
-    {
+    while (TRUE) {
         memset(buffer, 0, sizeof(buffer));
         //Receive message from server
-        recv(sock, buffer, MAXBYTE, NULL);
-        
+        recv(sock, buffer, MAXBYTE, 0);
+
         addToSocketBuffer(buffer);
-        
-        while (hasCommand('\n'))
-        {
+
+        while (hasCommand('\n')) {
             showMessage(socketArg);
-            
-            if (strstr(socketArg, START))
-            {
+
+            if (strstr(socketArg, START)) {
+                char tmp[MAXBYTE] = {0};
+                sscanf(socketArg, "%s %d", tmp, &meFlag);
+                otherFlag = 3 - meFlag;
                 start();
-            }
-            else if (strstr(socketArg, PLACE))
-            {
+            } else if (strstr(socketArg, PLACE)) {
                 char tmp[MAXBYTE] = {0};
-                int x,  y;
-                sscanf(socketArg, "%s %d %d", tmp, &x, &y);
-                turn(x, y);
-            }
-            else if (strstr(socketArg, BEGIN))
-            {
-                begin();
-            }
-            else if (strstr(socketArg, READY))
-            {
-                ready();
-            }
-            else if (strstr(socketArg, TURN))
-            {
+                int x, y, option;
+                sscanf(socketArg, "%s %d %d %d", tmp, &x, &y, &option);
+                place(x, y, option);
+            } else if (strstr(socketArg, TURN)) {
+                turn();
+            } else if (strstr(socketArg, END)) {
                 char tmp[MAXBYTE] = {0};
-                int x,  y;
-                sscanf(socketArg, "%s %d %d", tmp, &x, &y);
-                turn(x, y);
-                lastX = x;
-                lastY = y;
+                int result;
+                sscanf(socketArg, "%s %d", tmp, &result);
+                end(result);
             }
-            else if (strstr(socketArg, WIN))
-            {
-                win();
-            }
-            else if (strstr(socketArg, LOSE))
-            {
-                lose();
-            }
-        
         }
-        
-    }
-}
 
-void initReplay()
-{
-    FILE *fp;
-    
-    replayList = (struct rpointer *) malloc(sizeof(struct rpointer));
-    replayList->x = -1;
-    replayList->y = -1;
-    replayList->prev = NULL;
-    replayList->next = NULL;
-
-    
-    struct rpointer *tail = replayList;
-    struct rpointer *tp;
-        
-    if ((fp = fopen(globalArgs.replayFile, "r")) == NULL)
-    {
-        showInfo("Replay does not exist!");
-        exit(1);
-    }
-    int x, y;
-    while (fscanf(fp, "%d%d\n", &x, &y) != EOF)
-    {
-        tp = (struct rpointer *) malloc(sizeof(struct rpointer));
-        tp->x = x;
-        tp->y = y;
-        tp->prev = tail;
-        tp->next = NULL;
-        tail->next = tp;
-        tail = tp;
-    }
-}
-
-void loopR()
-{
-    INPUT_RECORD ir[128];
-    DWORD nRead;
-    UINT i;
-    SetConsoleMode(hin, ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
-    
-    initReplay();
-    
-    struct rpointer *tp = replayList;
-    
-    while (TRUE)
-    {
-        ReadConsoleInput(hin, ir, 128, &nRead);
-        for (i = 0; i < nRead; i++)
-        {
-            if (KEY_EVENT == ir[i].EventType)
-            {
-                if (ir[i].Event.KeyEvent.wVirtualKeyCode == VK_DOWN
-                    && ir[i].Event.KeyEvent.bKeyDown == TRUE)
-                {
-                    // Down key
-                    if (tp->next == NULL)
-                    {
-                        showInfo("Already at the last step!");
-                    }
-                    else
-                    {
-                        tp = tp->next;
-                        turn(tp->x, tp->y);
-                        memset(buffer, 0, sizeof(buffer));
-                        sprintf(buffer, "%d step", step);
-                        showInfo(buffer);
-                    }
-                }
-                else if (ir[i].Event.KeyEvent.wVirtualKeyCode == VK_UP
-                    && ir[i].Event.KeyEvent.bKeyDown == TRUE)
-                {
-                    // Up key
-                    if (tp->prev == NULL)
-                    {
-                        showInfo("Already at the initial step!");
-                    }
-                    else
-                    {
-                        unPutChessAt(tp->x, tp->y);
-                        tp = tp->prev;
-                        memset(buffer, 0, sizeof(buffer));
-                        sprintf(buffer, "%d step", step);
-                        showInfo(buffer);
-                    }
-                }
-            }
-            
-        }
     }
 }
 
@@ -779,7 +589,6 @@ void display_usage(char *exe)
     printf("  -a address        Server address\n");
     printf("  -p port           Server port\n");
     printf("  -D                Debug mode. When set, the user will manually play the chess.\n");
-    printf("  -r replay         Replay mode. Should follow with a valid replay file.\n");
 }
 
 void initArgs(int argc, char *argv[])
@@ -788,13 +597,10 @@ void initArgs(int argc, char *argv[])
     globalArgs.DEBUG = FALSE;
     globalArgs.ip = getIp();
     globalArgs.port = 23333;
-    globalArgs.replayFile = NULL;
-    
+
     opt = getopt(argc, argv, optString);
-    while (opt != -1)
-    {
-        switch (opt)
-        {
+    while (opt != -1) {
+        switch (opt) {
             case 'a':
                 globalArgs.ip = optarg;
                 break;
@@ -803,9 +609,6 @@ void initArgs(int argc, char *argv[])
                 break;
             case 'D':
                 globalArgs.DEBUG = TRUE;
-                break;
-            case 'r':
-                globalArgs.replayFile = optarg;
                 break;
             case 'h':
                 display_usage(argv[0]);
@@ -818,35 +621,22 @@ void initArgs(int argc, char *argv[])
                 exit(0);
                 break;
         }
-        
+
         opt = getopt(argc, argv, optString);
-    }
-    
-    if (NULL != globalArgs.replayFile && access(globalArgs.replayFile, F_OK) == -1)
-    {
-        printf("Replay file is invalid! Exiting...\n");
-        exit(-1);
     }
 }
 
 int main(int argc, char *argv[])
 {
     startSock();
-    
+
     initArgs(argc, argv);
     initVars();
     initUI();
-    
-    if (globalArgs.replayFile != NULL)
-    {
-        loopR();
-    }
-    else
-    {
-        initSock(globalArgs.ip, globalArgs.port);
-        loop();
-    }
-    
+    initSock(globalArgs.ip, globalArgs.port);
+        
+	loop();
+
     closeSock();
 
     return 0;
