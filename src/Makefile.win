@@ -1,4 +1,4 @@
-# Project: ReversiClient
+# Project: MakyekClient
 # Makefile created by Dev-C++ 5.11
 
 CPP      = g++.exe -D__DEBUG__

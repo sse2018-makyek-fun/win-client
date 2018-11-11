@@ -12,6 +12,10 @@ typedef int OPTION;
 #define DOWN 1
 #define LEFT 2
 #define RIGHT 3
+#define UP_LEFT 4
+#define UP_RIGHT 5
+#define DOWN_LEFT 6
+#define DOWN_RIGHT 7
 
 struct Command
 {

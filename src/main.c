@@ -24,7 +24,7 @@
 #define MESSAGE_X 100
 #define MESSAGE_Y 20
 
-const int DIR[4][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1} };
+const int DIR[8][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1} };
 
 struct globalArgs_t {
     char *ip;
@@ -301,7 +301,7 @@ BOOL moveChess(int x, int y, int option, int meFlag)
 	int otherFlag = 3 - meFlag;
 	int i;
 	
-	if (option < UP || option > RIGHT) return FALSE;
+	if (option < UP || option > DOWN_RIGHT ) return FALSE;
 	
 	int nextx = x + DIR[option][0];
 	int nexty = y + DIR[option][1];
@@ -407,19 +407,19 @@ void start()
 	int k;
     memset(board, 0, sizeof(board));
     
-    for (k = 0; k < 8; k++)
+    for (k = 0; k < 4; k++)
     {
     	setColor(8, 0);
-    	board[0][k] = BLACK;
-    	drawChess(0, k, "¡ñ");
-    	board[2][k] = BLACK;
-    	drawChess(2, k, "¡ñ");
+    	board[2][2+k] = BLACK;
+    	drawChess(2, 2+k, "¡ñ");
+    	board[3][k] = BLACK;
+    	drawChess(3, k, "¡ñ");
     	
         setColor(8, 15);
-    	board[5][k] = WHITE;
-    	drawChess(5, k, "¡ñ");
-    	board[7][k] = WHITE;
-    	drawChess(7, k, "¡ñ");
+    	board[4][4+k] = WHITE;
+    	drawChess(4, 4+k, "¡ñ");
+    	board[5][2+k] = WHITE;
+    	drawChess(5, 2+k, "¡ñ");
 	}
 	
 	setColor(0, 7);
@@ -477,7 +477,7 @@ void turn()
                 		if (inBoard(command.x, command.y))
                 		{
                 			int dx = x - command.x, dy = y - command.y;
-                			for (j = 0; j < 4; j++)
+                			for (j = 0; j < 8; j++)
                 			{
                 				if (dx == DIR[j][0] && dy == DIR[j][1])
                 				{
