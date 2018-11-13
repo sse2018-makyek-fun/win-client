@@ -409,16 +409,16 @@ void start()
     
     for (k = 0; k < 4; k++)
     {
-    	setColor(8, 0);
-    	board[2][2+k] = BLACK;
+        setColor(8, 15);
+    	board[2][2+k] = WHITE;
     	drawChess(2, 2+k, "¡ñ");
-    	board[3][k] = BLACK;
+    	board[3][k] = WHITE;
     	drawChess(3, k, "¡ñ");
     	
-        setColor(8, 15);
-    	board[4][4+k] = WHITE;
+    	setColor(8, 0);
+    	board[4][4+k] = BLACK;
     	drawChess(4, 4+k, "¡ñ");
-    	board[5][2+k] = WHITE;
+    	board[5][2+k] = BLACK;
     	drawChess(5, 2+k, "¡ñ");
 	}
 	
