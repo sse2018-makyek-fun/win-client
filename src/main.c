@@ -250,24 +250,32 @@ void resetBoard()
     setColor(8, 0);
     moveCursorTo(0, 0);
 
-    printf("    A   B   C   D   E   F   G   H    \n");
-    printf("  ©³©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©· \n");
-    printf(" 0©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
-    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
-    printf(" 1©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
-    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
-    printf(" 2©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
-    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
-    printf(" 3©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
-    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
-    printf(" 4©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
-    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
-    printf(" 5©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
-    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
-    printf(" 6©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
-    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
-    printf(" 7©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
-    printf("  ©»©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©¿ \n");
+    printf("    A   B   C   D   E   F   G   H   I   J   K   L    \n");
+    printf("  ©³©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©×©¥©· \n");
+    printf(" 0©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 1©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 2©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 3©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 4©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 5©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 6©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 7©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 8©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf(" 9©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf("10©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©Ç©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©ï©¥©Ï \n");
+    printf("11©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§  ©§ \n");
+    printf("  ©»©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©ß©¥©¿ \n");
 
     setColor(0, 7);
 }
@@ -323,6 +331,18 @@ BOOL moveChess(int x, int y, int option, int meFlag)
     drawChess(nextx, nexty, "¡ñ");
     
     // Yak
+    if (inBoard(nextx - 1, nexty - 1) && inBoard(nextx + 1, nexty + 1) && board[nextx - 1][nexty - 1] == otherFlag && board[nextx + 1][nexty + 1] == otherFlag)
+    {
+        board[nextx - 1][nexty - 1] = board[nextx + 1][nexty + 1] = meFlag;
+		drawChess(nextx - 1, nexty - 1, "¡ñ");
+		drawChess(nextx + 1, nexty + 1, "¡ñ");
+    }
+    if (inBoard(nextx + 1, nexty - 1) && inBoard(nextx - 1, nexty + 1) && board[nextx + 1][nexty - 1] == otherFlag && board[nextx - 1][nexty + 1] == otherFlag)
+    {
+        board[nextx + 1][nexty - 1] = board[nextx - 1][nexty + 1] = meFlag;
+		drawChess(nextx + 1, nexty - 1, "¡ñ");
+		drawChess(nextx - 1, nexty + 1, "¡ñ");
+    }
 	if (nexty - 1 >= 0 && nexty + 1 < BOARD_SIZE && board[nextx][nexty - 1] == otherFlag && board[nextx][nexty + 1] == otherFlag)
 	{
 		board[nextx][nexty - 1] = board[nextx][nexty + 1] = meFlag;
@@ -337,7 +357,7 @@ BOOL moveChess(int x, int y, int option, int meFlag)
 	}
     
     // Mak
-    for (i = 0; i < 4; i++)
+    for (i = 0; i < 8; i++)
     {
 		if (inBoard(nextx + 2 * DIR[i][0], nexty + 2 * DIR[i][1]) &&
 			board[nextx + DIR[i][0]][nexty + DIR[i][1]] == otherFlag && board[nextx + 2 * DIR[i][0]][nexty + 2 * DIR[i][1]] == meFlag)
@@ -404,24 +424,30 @@ void closeSock()
 
 void start()
 {
-	int k;
+	int i;
     memset(board, 0, sizeof(board));
     
-    for (k = 0; k < 4; k++)
-    {
+    for (i = 0; i < 3; i++)
+	{
         setColor(8, 15);
-    	board[2][2+k] = WHITE;
-    	drawChess(2, 2+k, "¡ñ");
-    	board[3][k] = WHITE;
-    	drawChess(3, k, "¡ñ");
-    	
+    	board[2][2+i] = board[6][6+i] = WHITE;
+    	drawChess(2, 2+i, "¡ñ");
+    	drawChess(6, 6+i, "¡ñ");
     	setColor(8, 0);
-    	board[4][4+k] = BLACK;
-    	drawChess(4, 4+k, "¡ñ");
-    	board[5][2+k] = BLACK;
-    	drawChess(5, 2+k, "¡ñ");
+    	board[5][3+i] = board[9][7+i] = BLACK;
+    	drawChess(5, 3+i, "¡ñ");
+    	drawChess(9, 7+i, "¡ñ");
 	}
-	
+	for (i = 0; i < 2; i++)
+	{
+        setColor(8, 15);
+    	board[8+i][2] = WHITE;
+    	drawChess(8+i, 2, "¡ñ");
+    	setColor(8, 0);
+    	board[2+i][9] = BLACK;
+    	drawChess(2+i, 9, "¡ñ");
+	}
+
 	setColor(0, 7);
 	
 	if (meFlag == BLACK)

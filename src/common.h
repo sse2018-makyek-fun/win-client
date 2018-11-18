@@ -1,7 +1,7 @@
 #ifndef COMMON
 #define COMMON
 
-#define BOARD_SIZE 8
+#define BOARD_SIZE 12
 #define EMPTY 0
 #define BLACK 1
 #define WHITE 2
