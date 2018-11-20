@@ -24,7 +24,7 @@
 #define MESSAGE_X 100
 #define MESSAGE_Y 20
 
-const int DIR[8][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1} };
+const int DI[8][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1} };
 
 struct globalArgs_t {
     char *ip;
@@ -311,8 +311,8 @@ BOOL moveChess(int x, int y, int option, int meFlag)
 	
 	if (option < UP || option > DOWN_RIGHT ) return FALSE;
 	
-	int nextx = x + DIR[option][0];
-	int nexty = y + DIR[option][1];
+	int nextx = x + DI[option][0];
+	int nexty = y + DI[option][1];
 
     if (!inBoard(x, y) || !inBoard(nextx, nexty) || board[x][y] != meFlag && board[nextx][nexty] != EMPTY)
     {
@@ -359,11 +359,11 @@ BOOL moveChess(int x, int y, int option, int meFlag)
     // Mak
     for (i = 0; i < 8; i++)
     {
-		if (inBoard(nextx + 2 * DIR[i][0], nexty + 2 * DIR[i][1]) &&
-			board[nextx + DIR[i][0]][nexty + DIR[i][1]] == otherFlag && board[nextx + 2 * DIR[i][0]][nexty + 2 * DIR[i][1]] == meFlag)
+		if (inBoard(nextx + 2 * DI[i][0], nexty + 2 * DI[i][1]) &&
+			board[nextx + DI[i][0]][nexty + DI[i][1]] == otherFlag && board[nextx + 2 * DI[i][0]][nexty + 2 * DI[i][1]] == meFlag)
 		{
-			board[nextx + DIR[i][0]][nexty + DIR[i][1]] = meFlag;
-			drawChess(nextx + DIR[i][0], nexty + DIR[i][1], "¡ñ");
+			board[nextx + DI[i][0]][nexty + DI[i][1]] = meFlag;
+			drawChess(nextx + DI[i][0], nexty + DI[i][1], "¡ñ");
 		}
 	}
 
@@ -505,7 +505,7 @@ void turn()
                 			int dx = x - command.x, dy = y - command.y;
                 			for (j = 0; j < 8; j++)
                 			{
-                				if (dx == DIR[j][0] && dy == DIR[j][1])
+                				if (dx == DI[j][0] && dy == DI[j][1])
                 				{
 									if (moveChess(command.x, command.y, j, meFlag)) {
 										memset(buffer, 0, sizeof(buffer));

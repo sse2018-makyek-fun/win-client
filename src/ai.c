@@ -5,7 +5,7 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 
-const int DI[8][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1} };
+const int DIR[8][2] = { {-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1} };
 
 BOOL isInBound(int x, int y) {
   return x >= 0 && x < BOARD_SIZE && y >= 0 && y < BOARD_SIZE;
@@ -34,7 +34,7 @@ struct Command findValidPos(const char board[BOARD_SIZE][BOARD_SIZE], int flag) 
   struct Command command = {0, 0, 0};
   int k, x, y;
   for (k = 0; k < 8; k++) {
-    const int* delta = DI[k];
+    const int* delta = DIR[k];
     for (x = 0; x < BOARD_SIZE; x++) {
       for (y = 0; y < BOARD_SIZE; y++) {
         if (board[x][y] != flag) {
